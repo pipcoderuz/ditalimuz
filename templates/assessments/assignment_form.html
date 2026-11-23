@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl"><div class="card card-pad">
+  <h1 class="page-title mb-1">{{ title }}</h1><p class="muted mb-5">{{ course.title }}</p>
+  <form method="post">{% csrf_token %}{% include "partials/form.html" %}
+    <h2 class="section-title mt-6 mb-1">Baholash rubrikasi</h2>
+    <p class="mb-3 text-sm muted">Loyiha qismlarga bo'lib baholanadi. Masalan: «To'g'ri ishlashi» — 40, «Kod tozaligi» — 30, «Xatolarni ushlash» — 30. <strong>Umumiy maksimal ball mezonlar yig'indisidan avtomatik hisoblanadi.</strong></p>
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}<div class="mb-3 rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-300">{{ formset.non_form_errors }}</div>{% endif %}
+    <div class="space-y-2">{% for f in formset %}
+      <div class="grid grid-cols-12 items-start gap-2 rounded-xl border border-slate-200 p-2 dark:border-slate-700">{% for h in f.hidden_fields %}{{ h }}{% endfor %}
+        <div class="col-span-12 md:col-span-4">{{ f.name }}{% for e in f.name.errors %}<p class="field-error">{{ e }}</p>{% endfor %}</div>
+        <div class="col-span-12 md:col-span-5">{{ f.description }}</div>
+        <div class="col-span-8 md:col-span-2">{{ f.max_score }}{% for e in f.max_score.errors %}<p class="field-error">{{ e }}</p>{% endfor %}</div>
+        <div class="col-span-4 md:col-span-1">{% if f.instance.pk %}<label class="flex items-center gap-1 text-xs muted">{{ f.DELETE }} o'chir</label>{% endif %}</div></div>
+    {% endfor %}</div>
+    <p class="mt-2 text-xs muted">Ko'proq mezon kerak bo'lsa, saqlang va qayta tahrirlang (har safar yangi bo'sh qator qo'shiladi).</p>
+    <div class="flex items-center gap-3 pt-4"><button class="btn btn-primary">Saqlash</button><a class="btn btn-ghost" href="{{ course.get_absolute_url }}">Bekor qilish</a></div>
+  </form>
+</div></div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}{{ thread.title }} — Forum{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{% url 'community:thread_list' %}">Forum</a><span>/</span><span class="text-slate-800 dark:text-slate-200">{{ thread.title }}</span></div>
+<div class="mx-auto max-w-4xl space-y-4">
+  <div class="card card-pad !border-primary-300 dark:!border-primary-800">
+    <div class="flex items-start justify-between gap-3"><h1 class="page-title !text-2xl">{{ thread.title }}</h1>
+      {% if user.can_teach %}<form method="post" action="{% url 'community:thread_delete' thread.pk %}" data-confirm="Mavzu va barcha javoblar o'chiriladi. Davom etasizmi?">{% csrf_token %}<button class="btn btn-danger-outline btn-sm">🗑 Moderatsiya: o'chirish</button></form>{% endif %}</div>
+    <div class="mb-3 mt-1 flex items-center gap-2 text-sm muted">{% include "partials/avatar.html" with u=thread.author size=22 %} {{ thread.author.display_name }} · {{ thread.created_at|date:"d.m.Y H:i" }}{% if thread.course %} · <a class="link" href="{{ thread.course.get_absolute_url }}">{{ thread.course.title }}</a>{% endif %}</div>
+    <div class="rich">{{ thread.body|rich }}</div>
+  </div>
+  <h2 class="text-sm font-semibold uppercase tracking-wide muted">{{ posts|length }} javob</h2>
+  {% for p in posts %}<div class="card card-pad">
+    <div class="mb-2 flex items-center justify-between"><div class="flex items-center gap-2 text-sm">{% include "partials/avatar.html" with u=p.author size=24 %}<strong>{{ p.author.display_name }}</strong>{% if p.author.can_teach %}<span class="badge badge-primary">{{ p.author.get_role_display }}</span>{% endif %}<span class="muted">· {{ p.created_at|date:"d.m.Y H:i" }}</span></div>
+      {% if user.can_teach %}<form method="post" action="{% url 'community:post_delete' p.pk %}" data-confirm="Javob o'chirilsinmi?">{% csrf_token %}<button class="text-xs text-red-600 hover:underline">o'chirish</button></form>{% endif %}</div>
+    <div class="rich">{{ p.body|rich }}</div></div>{% endfor %}
+  <div class="card card-pad"><form method="post">{% csrf_token %}{% include "partials/form.html" %}<button class="btn btn-primary">Javob yuborish</button></form></div>
+</div>
+{% endblock %}

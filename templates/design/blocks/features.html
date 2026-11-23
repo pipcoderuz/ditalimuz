@@ -1,0 +1,15 @@
+<section id="imkoniyatlar" class="scroll-mt-24">
+  <div class="mx-auto mb-8 max-w-2xl text-center">
+    <h2 class="text-3xl font-bold tracking-tight">{{ block.title }}</h2>
+    {% if block.subtitle %}<p class="mt-2 text-lg muted">{{ block.subtitle }}</p>{% endif %}
+  </div>
+  <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    {% for item in block.items.all %}
+    <{% if item.url %}a href="{{ item.url }}"{% else %}div{% endif %} class="card card-pad card-hover block">
+      <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-100 text-2xl dark:bg-primary-900/50">{{ item.icon|default:"✨" }}</div>
+      <h3 class="mb-1 text-lg font-semibold">{{ item.title }}</h3>
+      <p class="text-sm muted">{{ item.text }}</p>
+    </{% if item.url %}a{% else %}div{% endif %}>
+    {% endfor %}
+  </div>
+</section>

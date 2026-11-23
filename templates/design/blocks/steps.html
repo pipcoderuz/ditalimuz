@@ -1,0 +1,9 @@
+<section>
+  <div class="mb-6 text-center"><h2 class="text-3xl font-bold tracking-tight">{{ block.title }}</h2>{% if block.subtitle %}<p class="mt-2 muted">{{ block.subtitle }}</p>{% endif %}</div>
+  <ol class="grid gap-4 md:grid-cols-3">
+    {% for item in block.items.all %}
+    <li class="card card-pad"><span class="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary-600 font-bold text-white">{{ forloop.counter }}</span>
+      <h3 class="font-semibold">{{ item.icon }} {{ item.title }}</h3><p class="mt-1 text-sm muted">{{ item.text }}</p></li>
+    {% endfor %}
+  </ol>
+</section>

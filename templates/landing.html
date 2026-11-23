@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% load design_tags %}
+{% block title %}{{ theme.site_name }}{% if theme.tagline %} — {{ theme.tagline }}{% endif %}{% endblock %}
+{% block content %}
+<div class="space-y-12">{% render_blocks 'landing' %}</div>
+{% endblock %}

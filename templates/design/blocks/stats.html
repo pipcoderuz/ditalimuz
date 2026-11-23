@@ -1,0 +1,8 @@
+<section>
+  {% if block.title %}<h2 class="mb-5 text-center text-2xl font-bold">{{ block.title }}</h2>{% endif %}
+  <div class="grid gap-4 sm:grid-cols-3">
+    <div class="stat-card text-center"><div class="stat-num">{{ stats.courses }}</div><div class="muted">kurs</div></div>
+    <div class="stat-card text-center"><div class="stat-num">{{ stats.students }}</div><div class="muted">talaba</div></div>
+    <div class="stat-card text-center"><div class="stat-num">{{ stats.teachers }}</div><div class="muted">o'qituvchi</div></div>
+  </div>
+</section>

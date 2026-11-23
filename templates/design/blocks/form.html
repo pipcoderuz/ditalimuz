@@ -1,0 +1,10 @@
+{% if dyn_form %}
+<section class="card card-pad mx-auto max-w-2xl">
+  {% if block.title %}<h2 class="section-title mb-1 !text-2xl">{{ block.title }}</h2>{% endif %}
+  {% if block.subtitle %}<p class="muted mb-4">{{ block.subtitle }}</p>{% endif %}
+  <form method="post" action="{% url 'design:public_form' block.form.slug %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+    {% include "partials/form.html" with form=dyn_form %}
+    <button class="btn btn-primary">{{ block.form.submit_label }}</button>
+  </form>
+</section>
+{% endif %}

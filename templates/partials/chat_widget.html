@@ -1,0 +1,14 @@
+<div class="card overflow-hidden" data-chat data-room="{{ room.pk }}" data-me="{{ user.pk }}" data-history="{% url 'community:chat_history' room.pk %}" data-send="{% url 'community:chat_send' room.pk %}">
+  <div class="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-3 dark:border-slate-700">
+    <div class="min-w-0"><h3 class="truncate font-semibold">{{ chat_title|default:"Chat" }}</h3>{% if chat_subtitle %}<div class="truncate text-xs muted">{{ chat_subtitle }}</div>{% endif %}</div>
+    <span data-chat-status class="whitespace-nowrap text-xs text-amber-600">○ ulanmoqda…</span>
+  </div>
+  <div class="p-3">
+    <div class="chat-box" data-chat-list aria-live="polite"></div>
+    <form class="mt-3 flex items-end gap-2">{% csrf_token %}
+      <textarea rows="1" maxlength="2000" class="input max-h-32 resize-none" placeholder="Xabar yozing…"></textarea>
+      <button class="btn btn-primary">Yuborish</button>
+    </form>
+    <p class="mt-1.5 text-[11px] muted">Enter — yuborish · Shift+Enter — yangi qator</p>
+  </div>
+</div>

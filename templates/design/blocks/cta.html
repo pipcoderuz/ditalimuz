@@ -1,0 +1,5 @@
+<section class="rounded-3xl p-8 text-center sm:p-12 {% if block.style == 'dark' %}bg-slate-900 text-white{% elif block.style == 'primary' %}bg-primary-600 text-white{% elif block.style == 'soft' %}bg-primary-50 dark:bg-primary-950{% else %}card{% endif %}">
+  <h2 class="text-3xl font-bold tracking-tight">{{ block.title }}</h2>
+  {% if block.subtitle %}<p class="mx-auto mt-3 max-w-xl opacity-90">{{ block.subtitle }}</p>{% endif %}
+  {% if block.button_label %}<a href="{{ block.button_url }}" class="btn btn-lg mt-6 bg-white text-primary-700 shadow hover:bg-slate-100">{{ block.button_label }}</a>{% endif %}
+</section>

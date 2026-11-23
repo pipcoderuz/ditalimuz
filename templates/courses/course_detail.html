@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}{{ course.title }} — {{ theme.site_name }}{% endblock %}
+{% block content %}
+<div class="card card-pad mb-6">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="min-w-0"><h1 class="page-title">{{ course.title }}</h1>
+      <div class="mt-1 text-sm muted">👤 {{ course.teacher.display_name|default:"—" }}{% if course.start_date %} · 📅 {{ course.start_date|date:"d.m.Y" }}{% endif %}{% if course.end_date %} – {{ course.end_date|date:"d.m.Y" }}{% endif %}
+        {% if not course.is_published %} <span class="badge badge-amber">Qoralama</span>{% endif %}</div></div>
+    <div class="flex flex-wrap gap-2">
+      <a class="btn btn-secondary btn-sm" href="{% url 'gamification:leaderboard' course.slug %}">🏆 Reyting</a>
+      <a class="btn btn-secondary btn-sm" href="{% url 'community:thread_list' %}?kurs={{ course.pk }}">💬 Forum</a>
+      {% if user.is_student and state.enrolled %}<a class="btn btn-secondary btn-sm" href="{% url 'analytics:student_stats_me' course.slug %}">📊 Statistikam</a><a class="btn btn-secondary btn-sm" href="{% url 'analytics:growth' course.slug %}">📈 O'sishim</a>{% endif %}
+      {% if manage %}<a class="btn btn-secondary btn-sm" href="{% url 'analytics:course_analytics' course.slug %}">📊 Analitika</a>{% endif %}
+    </div>
+  </div>
+  <div class="rich mt-4">{{ course.description|rich }}</div>
+</div>
+
+{% if manage %}
+<div class="card card-pad mb-6 !border-primary-300 dark:!border-primary-800">
+  <div class="flex flex-wrap items-center gap-2"><strong class="mr-2">Kursni boshqarish:</strong>
+    <a class="btn btn-primary btn-sm" href="{% url 'courses:module_create' course.slug %}">+ Modul</a>
+    {% if not pretest %}<a class="btn btn-secondary btn-sm" href="{% url 'assessments:quiz_create' course.slug %}?tur=pretest">+ Kirish testi</a>{% endif %}
+    {% if not final_quiz %}<a class="btn btn-secondary btn-sm" href="{% url 'assessments:quiz_create' course.slug %}?tur=final">+ Yakuniy test</a>{% endif %}
+    {% if not final_project %}<a class="btn btn-secondary btn-sm" href="{% url 'assessments:assignment_create' course.slug %}?tur=final">+ Yakuniy loyiha</a>{% endif %}
+    <a class="btn btn-secondary btn-sm" href="{% url 'courses:competencies' course.slug %}">Kompetensiyalar</a>
+    <a class="btn btn-secondary btn-sm" href="{% url 'courses:course_edit' course.slug %}">Tahrirlash</a>
+    <form method="post" action="{% url 'courses:course_delete' course.slug %}" data-confirm="Kurs va unga bog'liq barcha ma'lumotlar o'chiriladi. Davom etasizmi?">{% csrf_token %}<button class="btn btn-danger-outline btn-sm">O'chirish</button></form>
+  </div>
+  <p class="mt-3 text-sm muted">Yozilgan talabalar: <strong>{{ student_count }}</strong>. Kurs yakuni: yakuniy test, yakuniy loyiha, ikkalasi yoki hech biri (barcha modullar tugagach yakunlanadi). Chat javobgarlari: {% for r in responders %}<span class="badge badge-gray">{{ r.display_name }}</span> {% empty %}—{% endfor %}</p>
+</div>
+{% elif user.is_student and not state.enrolled %}
+<div class="card card-pad mb-6 flex flex-wrap items-center justify-between gap-3">
+  <div>Kursga yoziling va o'qishni boshlang.{% if pretest %} Avval kirish testi topshiriladi.{% endif %}</div>
+  {% if not course.end_date or course.end_date >= today %}<form method="post" action="{% url 'courses:enroll' course.slug %}">{% csrf_token %}<button class="btn btn-primary">Kursga yozilish</button></form>{% else %}<span class="badge badge-gray">Kurs tugagan</span>{% endif %}
+</div>
+{% endif %}
+
+{% if state.read_only %}<div class="mb-6 rounded-xl border border-slate-300 bg-slate-100 p-4 text-sm dark:border-slate-600 dark:bg-slate-800">📖 <strong>Faqat ko'rish rejimi:</strong> {% if state.enrollment.status == "completed" %}kursni yakunlagansiz{% else %}kurs muddati tugagan{% endif %} — materiallarni ko'rishingiz mumkin, lekin test va topshiriq topshira olmaysiz.</div>{% endif %}
+
+{% if user.is_student and state.enrolled %}
+<div class="card card-pad mb-6">
+  <div class="mb-2 flex justify-between text-sm"><strong>Progress</strong><span class="muted">{{ progress.done }}/{{ progress.total }} mavzu · {{ progress.percent }}%</span></div>
+  <div class="progress progress-green"><div style="width:{{ progress.percent }}%"></div></div>
+  {% if certificate %}<a class="btn btn-warning mt-4" href="{{ certificate.get_absolute_url }}">🎓 Sertifikatni ko'rish</a>{% endif %}
+</div>
+{% endif %}
+{% if state.progressive and not manage %}<div class="mb-6 rounded-xl border border-sky-200 bg-sky-50 p-3 text-sm text-sky-800 dark:border-sky-800 dark:bg-sky-900/30 dark:text-sky-300">🧭 Progressiv o'qitish yoqilgan: mavzular va modullar ketma-ket ochiladi.</div>{% endif %}
+
+{% if pretest %}
+<div class="card card-pad mb-4 flex flex-wrap items-center justify-between gap-3 !border-sky-300 dark:!border-sky-800">
+  <div><span class="badge badge-blue">Kirish testi</span> <strong class="ml-1">{{ pretest.title }}</strong><div class="text-sm muted">Boshlang'ich bilimingizni aniqlash uchun majburiy (bir marta topshiriladi).</div></div>
+  <div>{% if manage %}<a class="btn btn-secondary btn-sm" href="{{ pretest.get_absolute_url }}">Ochish</a>
+    {% elif pretest_attempt %}<a class="btn btn-success btn-sm" href="{{ pretest_attempt.get_absolute_url }}">✓ Topshirilgan: {{ pretest_attempt.score|floatformat:0 }} ball</a>
+    {% elif state.enrolled %}<a class="btn btn-primary btn-sm" href="{{ pretest.get_absolute_url }}">Testni boshlash</a>{% endif %}</div>
+</div>
+{% endif %}
+
+<div class="space-y-4">
+{% for item in outline %}{% with m=item.module %}
+<section class="card overflow-hidden {% if not item.access and not manage %}opacity-60{% endif %}" id="modul-{{ m.pk }}">
+  <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-5 py-3 dark:border-slate-700 dark:bg-slate-800/60">
+    <div class="flex flex-wrap items-center gap-2"><h2 class="font-semibold">{{ forloop.counter }}-modul: {{ m.title }}</h2>
+      {% if m.start_date or m.end_date %}<span class="text-xs muted">{% if m.start_date %}{{ m.start_date|date:"d.m" }}{% endif %} – {% if m.end_date %}{{ m.end_date|date:"d.m.Y" }}{% endif %}</span>{% endif %}
+      {% if item.passed %}<span class="badge badge-green">✓ Tugatilgan</span>{% endif %}
+      {% if not item.access %}<span class="badge badge-gray">🔒 {{ item.access.reason }}</span>{% endif %}</div>
+    {% if manage %}<div class="flex flex-wrap gap-1">
+      <a class="btn btn-secondary btn-sm" href="{% url 'courses:topic_create' m.pk %}">+ Mavzu</a>
+      <a class="btn btn-secondary btn-sm" href="{% url 'assessments:quiz_create' course.slug %}?tur=module&modul={{ m.pk }}">+ Modul testi</a>
+      <a class="btn btn-secondary btn-sm" href="{% url 'assessments:assignment_create' course.slug %}?tur=module&modul={{ m.pk }}">+ Topshiriq</a>
+      <a class="btn btn-ghost btn-sm" href="{% url 'courses:module_edit' m.pk %}">✎</a>
+      <form method="post" action="{% url 'courses:module_delete' m.pk %}" data-confirm="Modul o'chirilsinmi?">{% csrf_token %}<button class="btn btn-danger-outline btn-sm">×</button></form></div>{% endif %}
+  </div>
+  <div>
+    {% for t in item.topics %}
+    <div class="list-row">
+      <div class="min-w-0"><span>{% if t.done %}✅{% elif t.access %}📄{% else %}🔒{% endif %}</span>
+        {% if t.access %}<a class="font-medium hover:text-primary-600" href="{{ t.topic.get_absolute_url }}">{{ t.topic.title }}</a>{% else %}<span class="muted">{{ t.topic.title }}</span>{% endif %}
+        <span class="ml-1 inline-flex flex-wrap gap-1 align-middle">
+          {% if t.topic.video_url or t.topic.video_file %}<span class="badge badge-gray">video</span>{% endif %}
+          {% if t.topic.attachment %}<span class="badge badge-gray">fayl</span>{% endif %}
+          {% if t.counts.quiz %}<span class="badge badge-blue">test {{ t.counts.quiz }}</span>{% endif %}
+          {% if t.counts.assignment %}<span class="badge badge-primary">topshiriq {{ t.counts.assignment }}</span>{% endif %}
+          {% if t.counts.question %}<span class="badge badge-amber">savol {{ t.counts.question }}</span>{% endif %}</span></div>
+      {% if manage %}<div class="flex flex-wrap gap-1 text-xs">
+        <a class="link" href="{% url 'assessments:quiz_create' course.slug %}?tur=topic&mavzu={{ t.topic.pk }}">+test</a>
+        <a class="link" href="{% url 'assessments:assignment_create' course.slug %}?tur=topic&mavzu={{ t.topic.pk }}">+topshiriq</a>
+        <a class="link" href="{% url 'assessments:open_question_create' t.topic.pk %}">+savol</a>
+        <a class="link" href="{% url 'courses:topic_edit' t.topic.pk %}">tahrirlash</a></div>{% endif %}
+    </div>
+    {% endfor %}
+    {% for q in item.quizzes %}
+    <div class="list-row"><span>📝 {% if q.access %}<a class="font-medium hover:text-primary-600" href="{{ q.quiz.get_absolute_url }}">{{ q.quiz.title }}</a>{% else %}<span class="muted">{{ q.quiz.title }}</span>{% endif %}
+        <span class="badge badge-gray ml-1">modul testi · o'tish: {{ q.quiz.pass_score }}/{{ q.quiz.max_score }}</span></span>
+      <span>{% if q.passed %}<span class="badge badge-green">✓ {{ q.best|floatformat:0 }} ball</span>{% elif q.attempts %}<span class="badge badge-amber">{{ q.best|floatformat:0 }} ball · o'tmagan</span>{% endif %}</span></div>
+    {% endfor %}
+    {% for a in item.assignments %}
+    <div class="list-row"><span>💻 {% if a.access %}<a class="font-medium hover:text-primary-600" href="{{ a.assignment.get_absolute_url }}">{{ a.assignment.title }}</a>{% else %}<span class="muted">{{ a.assignment.title }}</span>{% endif %}
+        <span class="badge badge-gray ml-1">topshiriq · o'tish: {{ a.assignment.pass_score }}/{{ a.assignment.max_score }}</span></span>
+      <span>{% if a.passed %}<span class="badge badge-green">✓ {{ a.submission.total_score|floatformat:0 }} ball</span>{% elif a.submission and a.submission.status == "graded" %}<span class="badge badge-amber">{{ a.submission.total_score|floatformat:0 }} ball · qayta topshiring</span>{% elif a.submission %}<span class="badge badge-blue">tekshirilmoqda</span>{% endif %}</span></div>
+    {% endfor %}
+    {% if not item.topics and not item.quizzes and not item.assignments %}<div class="list-row muted">Bu modulda hali kontent yo'q.</div>{% endif %}
+  </div>
+</section>
+{% endwith %}{% empty %}<div class="card card-pad text-center muted">Modullar hali qo'shilmagan.</div>{% endfor %}
+</div>
+
+{% if final_quiz or final_project %}
+<h2 class="section-title mb-3 mt-8">Kurs yakuni</h2>
+<p class="mb-3 text-sm muted">Kursni yakunlash uchun quyidagi {% if final_quiz and final_project %}ikkala bosqichdan ham{% else %}bosqichdan{% endif %} o'tish kerak. Yakunlangach sertifikat avtomatik beriladi.</p>
+<div class="grid gap-4 {% if final_quiz and final_project %}md:grid-cols-2{% endif %}">
+  {% if final_quiz %}<div class="card card-pad !border-emerald-300 dark:!border-emerald-800">
+    <span class="badge badge-green">Yakuniy test</span><h3 class="mt-2 font-semibold">{{ final_quiz.title }}</h3>
+    <div class="text-sm muted">O'tish: {{ final_quiz.pass_score }}/{{ final_quiz.max_score }} ball</div>
+    {% if user.is_student and state.enrolled %}{% if final_quiz_passed %}<div class="mt-2"><span class="badge badge-green">✓ O'tgansiz — {{ final_quiz_best|floatformat:0 }} ball</span></div>{% elif not final_access %}<div class="mt-2 text-sm text-red-600">🔒 {{ final_access.reason }}</div>{% endif %}{% endif %}
+    <div class="mt-3">{% if manage or final_access %}<a class="btn btn-success btn-sm" href="{{ final_quiz.get_absolute_url }}">{% if manage %}Ochish{% else %}Boshlash{% endif %}</a>{% endif %}</div></div>{% endif %}
+  {% if final_project %}<div class="card card-pad !border-emerald-300 dark:!border-emerald-800">
+    <span class="badge badge-green">Yakuniy loyiha</span><h3 class="mt-2 font-semibold">{{ final_project.title }}</h3>
+    <div class="text-sm muted">O'tish: {{ final_project.pass_score }}/{{ final_project.max_score }} ball · kod yoziladigan katta loyiha</div>
+    {% if user.is_student and state.enrolled and not final_access %}<div class="mt-2 text-sm text-red-600">🔒 {{ final_access.reason }}</div>{% endif %}
+    {% if final_sub %}<div class="mt-2">{% if final_sub.passed %}<span class="badge badge-green">✓ {{ final_sub.total_score|floatformat:0 }} ball</span>{% elif final_sub.status == "graded" %}<span class="badge badge-amber">{{ final_sub.total_score|floatformat:0 }} ball · qayta topshiring</span>{% else %}<span class="badge badge-blue">tekshirilmoqda</span>{% endif %}</div>{% endif %}
+    <div class="mt-3">{% if manage or final_access %}<a class="btn btn-success btn-sm" href="{{ final_project.get_absolute_url }}">{% if manage %}Ochish{% elif final_sub %}Natijani ko'rish{% else %}Boshlash{% endif %}</a>{% endif %}</div></div>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

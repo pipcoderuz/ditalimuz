@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Talabalarim — {{ theme.site_name }}{% endblock %}
+{% block content %}
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3"><h1 class="page-title">Talabalarim</h1><a class="btn btn-secondary" href="{% url 'analytics:overview' %}">📊 To'liq statistika</a></div>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Talaba</th><th>Kurs</th><th>Yozilgan</th><th>Boshlagan</th><th style="width:14rem">Progress</th><th>Holat</th><th></th></tr></thead><tbody>
+{% for r in rows %}<tr>
+  <td><div class="flex items-center gap-2">{% include "partials/avatar.html" with u=r.e.student size=28 %}<a class="link" href="{% url 'accounts:profile_public' r.e.student.username %}">{{ r.e.student.display_name }}</a></div></td>
+  <td><a class="link" href="{{ r.e.course.get_absolute_url }}">{{ r.e.course.title }}</a></td>
+  <td class="text-xs muted">{{ r.e.enrolled_at|date:"d.m.Y" }}</td>
+  <td class="text-xs muted">{% if r.e.started_at %}{{ r.e.started_at|date:"d.m.Y" }}{% else %}<span class="badge badge-gray">boshlamagan</span>{% endif %}</td>
+  <td><div class="progress"><div style="width:{{ r.percent }}%"></div></div><span class="text-xs muted">{{ r.percent }}%</span></td>
+  <td>{% if r.e.status == "completed" %}<span class="badge badge-green">Yakunlagan</span>{% else %}<span class="badge badge-primary">O'qimoqda</span>{% endif %}</td>
+  <td class="text-right"><div class="flex justify-end gap-1"><a class="btn btn-secondary btn-sm" href="{% url 'analytics:student_stats' r.e.course.slug r.e.student.pk %}">📊</a>
+    <a class="btn btn-secondary btn-sm" href="{% url 'community:start_chat' r.e.student.pk %}">💬</a></div></td></tr>
+{% empty %}<tr><td colspan="7" class="muted">Hali kursingizga yozilgan talaba yo'q.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% load static ui %}<!doctype html>
+<html lang="uz" data-default-mode="{{ theme.default_mode }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ theme.site_name }}{% endblock %}</title>
+  {% if theme.favicon %}<link rel="icon" href="{{ theme.favicon.url }}">{% endif %}
+  <script>(function(){var m=localStorage.getItem('theme')||document.documentElement.dataset.defaultMode||'auto';var d=m==='dark'||(m==='auto'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');})();</script>
+  <link rel="stylesheet" href="{% static 'dist/tailwind.css' %}">
+  <link rel="stylesheet" href="{% static 'dist/pygments.css' %}">
+  {% if user.is_authenticated %}<link rel="stylesheet" href="{% static 'dist/rich-editor.css' %}">{% endif %}
+  <style>:root{ {% for shade, rgb in theme_palette.items %}--p-{{ shade }}:{{ rgb }};{% endfor %} --rte-accent: rgb(var(--p-600)); }</style>
+  {% block head %}{% endblock %}
+</head>
+<body class="flex min-h-screen flex-col" {% if user.is_authenticated %}data-auth="1"{% endif %}>
+{% for block in banner_blocks %}{% include "design/blocks/banner.html" %}{% endfor %}
+
+<header class="sticky top-0 z-40 border-b border-slate-200 bg-white/85 backdrop-blur dark:border-slate-700 dark:bg-slate-900/85">
+  <nav class="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4">
+    <a href="{% url 'home' %}" class="flex items-center gap-2 text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
+      {% if theme.logo %}<img src="{{ theme.logo.url }}" alt="" class="h-8 w-auto">{% else %}<span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary-600 text-white">{{ theme.site_name|initial_of }}</span>{% endif %}
+      <span class="hidden sm:inline">{{ theme.site_name }}</span>
+    </a>
+
+    <div id="main-menu" class="hidden flex-1 md:flex md:items-center md:gap-1 md:pl-4">
+      <ul class="flex flex-col gap-1 md:flex-row md:items-center">
+        {% for item in nav_items %}
+          {% if item.visible_children %}
+          <li>
+            <button id="dd-btn-{{ item.pk }}" data-dropdown-toggle="dd-{{ item.pk }}" data-dropdown-offset-distance="8" type="button" class="nav-link">{% if item.icon %}<span>{{ item.icon }}</span>{% endif %}{{ item.label }}<svg class="h-3 w-3" viewBox="0 0 10 6" fill="none"><path d="m1 1 4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+            <div id="dd-{{ item.pk }}" class="dropdown-panel"><ul class="py-1">
+              {% for c in item.visible_children %}<li><a href="{{ c.href }}" {% if c.new_tab %}target="_blank" rel="noopener"{% endif %} class="dropdown-item">{% if c.icon %}{{ c.icon }} {% endif %}{{ c.label }}</a></li>{% endfor %}
+            </ul></div>
+          </li>
+          {% else %}
+          <li><a href="{{ item.href }}" {% if item.new_tab %}target="_blank" rel="noopener"{% endif %} class="nav-link">{% if item.icon %}<span>{{ item.icon }}</span>{% endif %}{{ item.label }}
+            {% if item.badge == "messages" %}<span data-msg-badge class="badge badge-red {% if not unread_messages %}hidden{% endif %}">{{ unread_messages|default:0 }}</span>{% endif %}</a></li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="ml-auto flex items-center gap-2">
+      <button type="button" data-theme-toggle class="btn btn-ghost btn-sm !px-2.5" title="Qorong'i / yorug' rejim" aria-label="Rejimni almashtirish">
+        <svg class="h-5 w-5 dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+        <svg class="hidden h-5 w-5 dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path stroke-linecap="round" d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4m11.4-11.4 1.4-1.4"/></svg>
+      </button>
+      {% if user.is_authenticated %}
+      <a href="{% url 'community:notifications' %}" class="btn btn-ghost btn-sm relative !px-2.5" title="Bildirishnomalar">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M14.9 17.7a2.9 2.9 0 0 1-5.8 0M18 9a6 6 0 1 0-12 0c0 6-2.5 7.5-2.5 7.5h17S18 15 18 9Z"/></svg>
+        <span data-notif-badge class="absolute -right-1 -top-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white {% if not unread_notifications %}hidden{% endif %}">{{ unread_notifications|default:0 }}</span>
+      </a>
+      <div>
+        <button id="user-btn" data-dropdown-toggle="user-menu" data-dropdown-placement="bottom-end" type="button" class="flex items-center gap-2 rounded-full p-0.5 pr-3 ring-1 ring-slate-200 hover:bg-slate-50 dark:ring-slate-700 dark:hover:bg-slate-800">
+          {% include "partials/avatar.html" with u=user size=32 %}<span class="hidden text-sm font-medium lg:inline">{{ user.display_name }}</span>
+        </button>
+        <div id="user-menu" class="dropdown-panel">
+          <div class="px-4 py-3"><div class="truncate text-sm font-semibold">{{ user.display_name }}</div><div class="truncate text-xs muted">{{ user.get_role_display }}</div></div>
+          <ul class="py-1">
+            <li><a href="{% url 'accounts:profile_public' user.username %}" class="dropdown-item">Profilim</a></li>
+            <li><a href="{% url 'accounts:profile' %}" class="dropdown-item">Profil sozlamalari</a></li>
+            {% if user.is_platform_admin %}<li><a href="{% url 'admin:index' %}" class="dropdown-item">Admin panel (Unfold)</a></li>
+            <li><a href="{% url 'accounts:design_center' %}" class="dropdown-item">Dizayn markazi</a></li>{% endif %}
+          </ul>
+          <form method="post" action="{% url 'accounts:logout' %}" class="py-1">{% csrf_token %}<button class="dropdown-item text-red-600 dark:text-red-400">Chiqish</button></form>
+        </div>
+      </div>
+      {% else %}
+      <a class="btn btn-secondary btn-sm" href="{% url 'accounts:login' %}">Kirish</a>
+      <a class="btn btn-primary btn-sm hidden sm:inline-flex" href="{% url 'accounts:register' %}">Ro'yxatdan o'tish</a>
+      {% endif %}
+      <button data-collapse-toggle="main-menu" type="button" class="btn btn-ghost btn-sm !px-2.5 md:hidden" aria-controls="main-menu" aria-label="Menyu">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8">
+  {% for message in messages %}
+  <div data-flash class="mb-4 flex items-start justify-between gap-3 rounded-xl border p-4 text-sm {% flash_classes message.tags %}" role="alert">
+    <div>{{ message }}</div>
+    <button type="button" data-close class="text-lg leading-none opacity-60 hover:opacity-100" aria-label="Yopish">×</button>
+  </div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="border-t border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+  <div class="mx-auto max-w-7xl px-4 py-8">
+    {% for block in footer_blocks %}<div class="mb-6">{% with tpl="design/blocks/"|add:block.block_type|add:".html" %}{% include tpl %}{% endwith %}</div>{% endfor %}
+    <p class="text-center text-sm muted">© {% now "Y" %} {{ theme.site_name }}{% if theme.footer_text %} — {{ theme.footer_text }}{% endif %}</p>
+  </div>
+</footer>
+
+<script src="{% static 'dist/flowbite.min.js' %}"></script>
+<script src="{% static 'dist/app.js' %}"></script>
+{% if user.is_authenticated %}<script src="{% static 'dist/rich-editor.js' %}"></script>{% endif %}
+{% block scripts %}{% endblock %}
+</body>
+</html>

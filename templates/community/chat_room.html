@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — chat{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{% url 'community:inbox' %}">Xabarlar</a><span>/</span><span class="text-slate-800 dark:text-slate-200">{{ title }}</span></div>
+<div class="mx-auto max-w-3xl space-y-3">
+  {% if context %}<a href="{{ context.topic.get_absolute_url }}" class="card card-pad card-hover flex items-center justify-between text-sm"><span>📚 Mavzu: <strong>{{ context.topic.title }}</strong> <span class="muted">· {{ context.course.title }}</span></span><span class="muted">Mavzuga o'tish →</span></a>{% endif %}
+  {% include "partials/chat_widget.html" with room=room chat_title=title chat_subtitle="Xabarlar sahifani yangilamasdan darhol ko'rinadi" %}
+</div>
+{% endblock %}

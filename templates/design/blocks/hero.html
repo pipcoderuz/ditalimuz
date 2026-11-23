@@ -1,0 +1,26 @@
+{% load ui %}
+<section class="relative overflow-hidden rounded-3xl p-6 sm:p-10 lg:p-14 {% if block.style == 'primary' %}bg-gradient-to-br from-primary-600 via-primary-700 to-primary-950 text-white{% elif block.style == 'dark' %}bg-slate-900 text-white{% elif block.style == 'soft' %}bg-primary-50 text-slate-900 dark:bg-primary-950 dark:text-white{% else %}card{% endif %}">
+  <div class="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-white/10 blur-3xl"></div>
+  <div class="relative grid items-center gap-10 {% if not user.is_authenticated %}lg:grid-cols-5{% endif %}">
+    <div class="min-w-0 lg:col-span-3">
+      {% if block.subtitle %}<span class="mb-4 inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide">{{ theme.site_name }}</span>{% endif %}
+      <h1 class="break-words text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-5xl">{{ block.title }}</h1>
+      {% if block.subtitle %}<p class="mt-5 max-w-2xl text-lg opacity-90">{{ block.subtitle }}</p>{% endif %}
+      {% if block.body %}<div class="rich mt-4 !text-inherit">{{ block.body|rich }}</div>{% endif %}
+      {% if block.button_label %}<div class="mt-8"><a href="{{ block.button_url }}" class="btn btn-lg bg-white text-primary-700 shadow-lg hover:bg-slate-100 focus:ring-white/40">{{ block.button_label }} →</a></div>{% endif %}
+    </div>
+    {% if not user.is_authenticated %}
+    <div class="min-w-0 lg:col-span-2">
+      <div class="card card-pad text-slate-800 shadow-2xl dark:text-slate-100">
+        <h2 class="section-title mb-4">Tizimga kirish</h2>
+        <form method="post" action="{% url 'accounts:login' %}" class="space-y-4">{% csrf_token %}
+          <div><label class="label" for="landing-username">Login</label><input id="landing-username" name="username" autocomplete="username" required class="input" placeholder="foydalanuvchi nomi"></div>
+          <div><label class="label" for="landing-password">Parol</label><input id="landing-password" name="password" type="password" autocomplete="current-password" required class="input" placeholder="••••••••"></div>
+          <button class="btn btn-primary w-full">Kirish</button>
+        </form>
+        <p class="mt-4 text-center text-sm muted">Akkauntingiz yo'qmi? <a class="link" href="{% url 'accounts:register' %}">Ro'yxatdan o'ting</a></p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>

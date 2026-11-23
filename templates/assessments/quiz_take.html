@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}{{ quiz.title }} — test{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl">
+  <div class="sticky top-16 z-30 mb-4 flex items-center justify-between rounded-2xl border border-slate-200 bg-white/90 px-4 py-3 backdrop-blur dark:border-slate-700 dark:bg-slate-900/90">
+    <h1 class="font-semibold">{{ quiz.title }}</h1>
+    {% if quiz.time_limit_minutes %}<span id="timer" data-seconds="{% widthratio quiz.time_limit_minutes 1 60 %}" class="badge badge-red !text-sm">⏱ --:--</span>{% endif %}
+  </div>
+  <form method="post" id="quizForm" class="space-y-4">{% csrf_token %}<input type="hidden" name="token" value="{{ token }}">
+  {% for q in questions %}
+    <div class="card card-pad">
+      <div class="mb-2 font-semibold">{{ forloop.counter }}. {{ q.text }} <span class="badge badge-gray ml-1">{{ q.points }} ball</span></div>
+      {% if q.code_snippet %}<div class="mb-3">{{ q.code_snippet|code_html:q.code_language }}</div>{% endif %}
+      {% if q.kind == "multiple" %}<div class="mb-2 text-xs muted">Bir nechta to'g'ri javobni belgilang.</div>{% endif %}
+      <div class="space-y-2">{% for c in q.choices.all %}
+        <label class="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 px-3 py-2.5 text-sm transition hover:bg-slate-50 has-[:checked]:border-primary-500 has-[:checked]:bg-primary-50 dark:border-slate-700 dark:hover:bg-slate-700/40 dark:has-[:checked]:bg-primary-950/40">
+          <input class="checkbox {% if q.kind != 'multiple' %}!rounded-full{% endif %}" type="{% if q.kind == 'multiple' %}checkbox{% else %}radio{% endif %}" name="q_{{ q.pk }}" value="{{ c.pk }}"><span>{{ c.text }}</span></label>
+      {% endfor %}</div>
+    </div>
+  {% endfor %}
+    <div class="flex items-center gap-3"><button class="btn btn-primary btn-lg" data-confirm="Javoblarni yuborasizmi?">Javoblarni yuborish</button><a class="btn btn-ghost" href="{{ quiz.get_absolute_url }}">Bekor qilish</a></div>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  const t = document.getElementById('timer');
+  if (t) { let s = parseInt(t.dataset.seconds, 10);
+    const tick = () => { const m = Math.floor(s / 60), r = s % 60; t.textContent = '⏱ ' + String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
+      if (s-- <= 0) { clearInterval(id); document.getElementById('quizForm').submit(); } };
+    const id = setInterval(tick, 1000); tick(); }
+</script>
+{% endblock %}

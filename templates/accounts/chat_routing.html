@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Chat yo'naltirish — {{ theme.site_name }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{% url 'accounts:admin_panel' %}">Boshqaruv</a><span>/</span><span>Chat yo'naltirish</span></div>
+<h1 class="page-title mb-2">Chat kimga borishini belgilash</h1>
+<p class="muted mb-6">Talabalar mavzu sahifasida yozgan xabarlar shu kurs uchun tanlangan o'qituvchi/adminlarga boradi. Hech kim tanlanmasa — kurs o'qituvchisiga. Tanlanganlar talabalar bilan shaxsiy chat ham boshlay oladi.</p>
+<div class="space-y-4">
+{% for r in rows %}
+  <form method="post" action="{% url 'accounts:chat_routing_update' r.course.pk %}" class="card card-pad">{% csrf_token %}
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-2"><div><h2 class="section-title">{{ r.course.title }}</h2><div class="text-xs muted">Kurs o'qituvchisi: {{ r.course.teacher.display_name|default:"—" }}</div></div>
+      <button class="btn btn-primary btn-sm">Saqlash</button></div>
+    <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      {% for s in staff %}<label class="flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-700/40">
+        <input type="checkbox" name="responders" value="{{ s.pk }}" class="checkbox" {% if s.pk in r.selected %}checked{% endif %}>
+        {% include "partials/avatar.html" with u=s size=24 %}<span>{{ s.display_name }} <span class="text-xs muted">· {{ s.get_role_display }}</span></span></label>{% endfor %}
+    </div>
+  </form>
+{% empty %}<div class="card card-pad muted">Kurslar yo'q.</div>{% endfor %}
+</div>
+{% endblock %}

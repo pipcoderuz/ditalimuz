@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}{{ person.display_name }} — {{ theme.site_name }}{% endblock %}
+{% block content %}
+<div class="card card-pad mb-6 flex flex-wrap items-center gap-5">
+  {% include "partials/avatar.html" with u=person size=88 %}
+  <div class="min-w-0 flex-1"><h1 class="page-title !text-2xl">{{ person.display_name }}</h1>
+    <div class="muted">{{ person.get_role_display }}{% if person.github_username %} · <a class="link" href="https://github.com/{{ person.github_username }}" target="_blank" rel="noopener">GitHub</a>{% endif %}</div>
+    {% if person.bio %}<p class="mt-2 text-sm">{{ person.bio }}</p>{% endif %}</div>
+  <div>{% if own %}<a class="btn btn-secondary btn-sm" href="{% url 'accounts:profile' %}">Tahrirlash</a>
+    {% elif user.is_authenticated and person != user and chat_allowed %}<a class="btn btn-primary btn-sm" href="{% url 'community:start_chat' person.pk %}">💬 Xabar yozish</a>{% endif %}</div>
+</div>
+{% if person.is_student %}
+<div class="grid gap-6 lg:grid-cols-2">
+  <div><h2 class="section-title mb-3">Yutuqlar</h2><div class="card card-pad space-y-3">
+    {% for b in badges %}<div class="flex items-center gap-3"><span class="text-3xl">{{ b.info.icon }}</span><div><div class="font-semibold">{{ b.info.title }}</div><div class="text-xs muted">{{ b.info.desc }} · {{ b.course.title }}</div></div></div>
+    {% empty %}<span class="muted">Hozircha yutuqlar yo'q.</span>{% endfor %}</div></div>
+  <div><h2 class="section-title mb-3">Sertifikatlar</h2><div class="card overflow-hidden">
+    {% for c in certs %}<a class="list-row" href="{{ c.get_absolute_url }}"><span>🎓 {{ c.enrollment.course.title }}</span><span class="text-xs muted">{{ c.issued_at|date:"d.m.Y" }} · {{ c.final_percent|floatformat:0 }}% · {{ c.code }}</span></a>
+    {% empty %}<div class="list-row muted">Sertifikatlar yo'q.</div>{% endfor %}</div></div>
+</div>
+{% endif %}
+{% endblock %}

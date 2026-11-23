@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — {{ theme.site_name }}{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl">
+  <div class="card card-pad">
+    <h1 class="page-title mb-1">{{ title }}</h1>
+    {% if subtitle %}<p class="muted mb-5">{{ subtitle }}</p>{% else %}<div class="mb-5"></div>{% endif %}
+    <form method="post"{% if multipart %} enctype="multipart/form-data"{% endif %}>{% csrf_token %}
+      {% include "partials/form.html" %}
+      <div class="flex items-center gap-3 pt-2"><button class="btn btn-primary">Saqlash</button><a href="javascript:history.back()" class="btn btn-ghost">Orqaga</a></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

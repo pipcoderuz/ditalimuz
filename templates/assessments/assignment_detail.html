@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}{{ assignment.title }} — {{ course.title }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ course.get_absolute_url }}">{{ course.title }}</a><span>/</span><span class="text-slate-800 dark:text-slate-200">{{ assignment.title }}</span></div>
+<div class="card card-pad mb-6">
+  <div class="flex flex-wrap items-start justify-between gap-3"><div>
+    <span class="badge {% if assignment.kind == 'final' %}badge-green{% else %}badge-primary{% endif %}">{{ assignment.get_kind_display }}</span>
+    <h1 class="page-title mt-2">{{ assignment.title }}</h1></div>
+    {% if manage %}<div class="flex gap-2"><a class="btn btn-secondary btn-sm" href="{% url 'assessments:assignment_edit' assignment.pk %}">Tahrirlash</a>
+      <form method="post" action="{% url 'assessments:assignment_delete' assignment.pk %}" data-confirm="Topshiriq va barcha yuborilgan ishlar o'chiriladi. Davom etasizmi?">{% csrf_token %}<button class="btn btn-danger-outline btn-sm">O'chirish</button></form></div>{% endif %}</div>
+  <div class="rich mt-3">{{ assignment.description|rich }}</div>
+  <div class="mt-4 flex flex-wrap gap-x-6 text-sm muted">{% if assignment.effective_due %}<span>Muddat: <strong class="text-slate-800 dark:text-slate-100">{{ assignment.effective_due|date:"d.m.Y" }}</strong></span>{% endif %}
+    <span>O'tish bali: <strong class="text-slate-800 dark:text-slate-100">{{ assignment.pass_score }}/{{ assignment.max_score }}</strong></span></div>
+</div>
+
+<div class="card card-pad mb-6"><h2 class="section-title mb-3">Baholash mezonlari (rubrika)</h2>
+  <div class="overflow-x-auto"><table class="tbl"><tbody>{% for c in criteria %}<tr><td>{{ c.name }}{% if c.description %}<div class="text-xs muted">{{ c.description }}</div>{% endif %}</td><td class="text-right"><strong>{{ c.max_score }}</strong> ball</td></tr>{% endfor %}
+  <tr><td><strong>Jami</strong></td><td class="text-right"><strong>{{ assignment.max_score }}</strong></td></tr></tbody></table></div></div>
+
+{% if manage %}
+<div class="mb-3 flex flex-wrap items-center justify-between gap-2"><h2 class="section-title">Yuborilgan ishlar</h2>{% if open_flags %}<a class="btn btn-danger btn-sm" href="{% url 'assessments:plagiarism_list' %}">⚠ {{ open_flags }} plagiat ogohlantirishi</a>{% endif %}</div>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Talaba</th><th>Yuborilgan</th><th>Holat</th><th>Ball</th><th></th></tr></thead><tbody>
+{% for s in latest %}<tr><td>{{ s.student.display_name }}</td><td>{{ s.submitted_at|date:"d.m.Y H:i" }}{% if s.is_late %} <span class="badge badge-red">kechikkan</span>{% endif %}</td>
+  <td>{% if s.status == "graded" %}{% if s.passed %}<span class="badge badge-green">O'tdi</span>{% else %}<span class="badge badge-red">O'tmadi</span>{% endif %}{% else %}<span class="badge badge-amber">Kutilmoqda</span>{% endif %}</td>
+  <td>{% if s.total_score is not None %}{{ s.total_score|floatformat:0 }}/{{ assignment.max_score }}{% else %}—{% endif %}</td>
+  <td class="text-right"><div class="flex justify-end gap-1"><a class="btn btn-secondary btn-sm" href="{{ s.get_absolute_url }}">Ko'rish</a><a class="btn btn-primary btn-sm" href="{% url 'assessments:submission_grade' s.pk %}">Baholash</a></div></td></tr>
+{% empty %}<tr><td colspan="5" class="muted">Hali ish yuborilmagan.</td></tr>{% endfor %}</tbody></table></div>
+
+{% else %}
+{% if blocked %}<div class="mb-6 rounded-xl border border-slate-300 bg-slate-100 p-4 text-sm dark:border-slate-600 dark:bg-slate-800">{{ blocked }}</div>
+{% elif form %}
+<div class="card card-pad mb-6"><h2 class="section-title mb-1">Ishni topshirish</h2>
+  <p class="mb-4 text-sm muted">Kodingizni ZIP fayl sifatida yuklang yoki GitHub repozitoriy havolasini kiriting (repozitoriy ochiq — public bo'lishi kerak).</p>
+  <form method="post" enctype="multipart/form-data" id="subForm">{% csrf_token %}{% include "partials/form.html" %}<button class="btn btn-primary">Yuborish</button></form></div>
+{% endif %}
+{% if mine %}<h2 class="section-title mb-3">Mening urinishlarim</h2>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Yuborilgan</th><th>Usul</th><th>Holat</th><th>Ball</th><th></th></tr></thead><tbody>
+{% for s in mine %}<tr><td>{{ s.submitted_at|date:"d.m.Y H:i" }}{% if s.is_late %} <span class="badge badge-red">kechikkan</span>{% endif %}</td><td>{{ s.get_method_display }}</td>
+  <td>{% if s.status == "graded" %}{% if s.passed %}<span class="badge badge-green">O'tdi</span>{% else %}<span class="badge badge-red">O'tmadi</span>{% endif %}{% else %}<span class="badge badge-amber">Tekshirilmoqda</span>{% endif %}</td>
+  <td>{% if s.total_score is not None %}{{ s.total_score|floatformat:0 }}/{{ assignment.max_score }}{% else %}—{% endif %}</td><td class="text-right"><a class="link" href="{{ s.get_absolute_url }}">Batafsil</a></td></tr>{% endfor %}</tbody></table></div>{% endif %}
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+  const f = document.getElementById('subForm');
+  if (f) { const zip = f.querySelector('#id_zip_file')?.closest('.mb-4'), gh = f.querySelector('#id_github_url')?.closest('.mb-4');
+    const sync = () => { const v = f.querySelector('input[name=method]:checked')?.value || 'zip';
+      if (zip) zip.style.display = v === 'zip' ? '' : 'none'; if (gh) gh.style.display = v === 'github' ? '' : 'none'; };
+    f.querySelectorAll('input[name=method]').forEach(r => r.addEventListener('change', sync)); sync(); }
+</script>
+{% endblock %}

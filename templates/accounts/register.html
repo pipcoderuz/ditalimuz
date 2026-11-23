@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Ro'yxatdan o'tish — {{ theme.site_name }}{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-xl"><div class="card card-pad">
+  <h1 class="page-title mb-1">Ro'yxatdan o'tish</h1><p class="muted mb-6">Talaba yoki o'qituvchi sifatida</p>
+  <form method="post">{% csrf_token %}{% include "partials/form.html" %}<button class="btn btn-primary w-full">Ro'yxatdan o'tish</button></form>
+  <div class="mt-5 rounded-xl bg-sky-50 p-3 text-sm text-sky-800 dark:bg-sky-900/30 dark:text-sky-300">Talabalar darhol kira oladi. O'qituvchi arizasini administrator tasdiqlagandan keyin tizimga kirish mumkin bo'ladi.</div>
+</div></div>
+{% endblock %}

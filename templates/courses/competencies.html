@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Kompetensiyalar — {{ course.title }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ course.get_absolute_url }}">{{ course.title }}</a><span>/</span><span>Kompetensiyalar</span></div>
+<h1 class="page-title mb-2">Kurs kompetensiyalari</h1>
+<p class="muted mb-6">Test savollarini kompetensiyalarga bog'lang — kurs oxirida talabaning kirish testi va yakuniy natijasi shu kompetensiyalar bo'yicha solishtiriladi.</p>
+<div class="grid gap-6 md:grid-cols-5">
+  <div class="card overflow-hidden md:col-span-3">
+    {% for c in items %}<div class="list-row"><span>{{ c.name }}</span><span class="flex items-center gap-2"><span class="badge badge-gray">{{ c.n }} savol</span>
+      <form method="post" action="{% url 'courses:competency_delete' c.pk %}">{% csrf_token %}<button class="btn btn-danger-outline btn-sm">×</button></form></span></div>
+    {% empty %}<div class="list-row muted">Kompetensiyalar yo'q.</div>{% endfor %}</div>
+  <div class="card card-pad md:col-span-2"><form method="post">{% csrf_token %}{% include "partials/form.html" %}<button class="btn btn-primary">Qo'shish</button></form></div>
+</div>
+{% endblock %}

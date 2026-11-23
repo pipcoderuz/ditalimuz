@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Reyting — {{ course.title }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ course.get_absolute_url }}">{{ course.title }}</a><span>/</span><span>Reyting</span></div>
+<h1 class="page-title mb-1">🏆 Reyting doskasi</h1>
+<p class="muted mb-6">Ball = test natijalarining eng yaxshisi + baholangan topshiriq va ochiq savollar + tugatilgan mavzular (har biri 2 ball). Kirish testi kirmaydi.</p>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th style="width:5rem">O'rin</th><th>Talaba</th><th class="text-right">Ball</th><th class="text-right">Yutuqlar</th></tr></thead><tbody>
+{% for r in rows %}<tr class="{% if r.student == user %}!bg-primary-50 dark:!bg-primary-950/40{% endif %}">
+  <td class="text-xl">{% if r.rank == 1 %}🥇{% elif r.rank == 2 %}🥈{% elif r.rank == 3 %}🥉{% else %}{{ r.rank }}{% endif %}</td>
+  <td><div class="flex items-center gap-2">{% include "partials/avatar.html" with u=r.student size=32 %}<a class="link" href="{% url 'accounts:profile_public' r.student.username %}">{{ r.student.display_name }}</a></div></td>
+  <td class="text-right font-semibold">{{ r.points }}</td><td class="text-right">{% if r.badges %}🏅 {{ r.badges }}{% else %}—{% endif %}</td></tr>
+{% empty %}<tr><td colspan="4" class="muted">Hali talabalar yo'q.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

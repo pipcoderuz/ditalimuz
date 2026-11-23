@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Boshqaruv paneli — {{ theme.site_name }}{% endblock %}
+{% block content %}
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="page-title">Administrator paneli</h1>
+  <div class="flex flex-wrap gap-2">
+    <a class="btn btn-secondary btn-sm" href="{% url 'accounts:design_center' %}">🎨 Dizayn markazi</a>
+    <a class="btn btn-secondary btn-sm" href="{% url 'accounts:chat_routing' %}">💬 Chat yo'naltirish</a>
+    <a class="btn btn-secondary btn-sm" href="{% url 'analytics:overview' %}">📊 Statistika</a>
+    <a class="btn btn-primary btn-sm" href="{% url 'admin:index' %}">Admin panel (Unfold)</a>
+  </div>
+</div>
+<div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-6">
+  <div class="stat-card"><div class="stat-num">{{ stats.students }}</div><div class="muted text-sm">talaba</div></div>
+  <div class="stat-card"><div class="stat-num">{{ stats.teachers }}</div><div class="muted text-sm">o'qituvchi</div></div>
+  <div class="stat-card"><div class="stat-num">{{ stats.courses }}</div><div class="muted text-sm">kurs</div></div>
+  <div class="stat-card"><div class="stat-num">{{ stats.enrollments }}</div><div class="muted text-sm">yozilish</div></div>
+  <div class="stat-card"><div class="stat-num">{{ stats.completed }}</div><div class="muted text-sm">yakunlagan</div></div>
+  <div class="stat-card"><div class="stat-num">{{ stats.submissions }}</div><div class="muted text-sm">topshirilgan ish</div></div>
+</div>
+
+<div class="card card-pad mb-6">
+  <h2 class="section-title mb-4">Platforma sozlamalari</h2>
+  <form method="post" action="{% url 'accounts:settings_update' %}" class="grid items-end gap-5 md:grid-cols-4">{% csrf_token %}
+    <div class="md:col-span-1"><label class="flex items-center gap-3 font-medium"><input type="checkbox" name="progressive_learning" class="checkbox !h-5 !w-5" {% if settings_form.progressive_learning.value %}checked{% endif %}> Progressiv o'qitish</label>
+      <p class="field-help">{{ settings_form.progressive_learning.help_text }}</p></div>
+    <div><label class="flex items-center gap-3 font-medium"><input type="checkbox" name="chat_enabled" class="checkbox !h-5 !w-5" {% if settings_form.chat_enabled.value %}checked{% endif %}> Chat yoqilgan</label>
+      <p class="field-help">{{ settings_form.chat_enabled.help_text }}</p></div>
+    <div><label class="label">{{ settings_form.plagiarism_threshold.label }}</label>{{ settings_form.plagiarism_threshold }}</div>
+    <div><button class="btn btn-primary w-full">Saqlash</button></div>
+  </form>
+</div>
+
+{% if pending %}
+<div class="mb-6 overflow-hidden rounded-2xl border border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
+  <div class="px-5 py-3 font-semibold text-amber-900 dark:text-amber-200">Tasdiq kutayotgan o'qituvchilar ({{ pending|length }})</div>
+  {% for u in pending %}<div class="list-row bg-white dark:bg-slate-800"><div>{{ u.display_name }} <span class="text-xs muted">@{{ u.username }} · {{ u.email }}</span></div>
+    <div class="flex gap-2"><form method="post" action="{% url 'accounts:user_action' u.pk 'approve' %}">{% csrf_token %}<button class="btn btn-success btn-sm">Tasdiqlash</button></form>
+    <form method="post" action="{% url 'accounts:user_action' u.pk 'reject' %}">{% csrf_token %}<button class="btn btn-danger-outline btn-sm">Rad etish</button></form></div></div>{% endfor %}
+</div>
+{% endif %}
+
+<h2 class="section-title mb-3">Foydalanuvchilar</h2>
+<form method="get" class="mb-4 grid gap-3 md:grid-cols-5">
+  <select name="rol" class="input"><option value="">Barcha rollar</option><option value="student" {% if role == "student" %}selected{% endif %}>Talaba</option><option value="teacher" {% if role == "teacher" %}selected{% endif %}>O'qituvchi</option><option value="admin" {% if role == "admin" %}selected{% endif %}>Administrator</option></select>
+  <select name="holat" class="input"><option value="">Barcha holatlar</option><option value="pending" {% if status == "pending" %}selected{% endif %}>Tasdiq kutilmoqda</option><option value="approved" {% if status == "approved" %}selected{% endif %}>Tasdiqlangan</option><option value="rejected" {% if status == "rejected" %}selected{% endif %}>Rad etilgan</option><option value="blocked" {% if status == "blocked" %}selected{% endif %}>Bloklangan</option></select>
+  <input name="q" value="{{ q }}" class="input md:col-span-2" placeholder="Qidirish...">
+  <button class="btn btn-secondary">Filtrlash</button>
+</form>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Foydalanuvchi</th><th>Rol</th><th>Holat</th><th class="text-right">Amallar</th></tr></thead><tbody>
+{% for u in users %}<tr>
+  <td><div class="flex items-center gap-2">{% include "partials/avatar.html" with u=u size=28 %}<div><a class="link" href="{% url 'accounts:profile_public' u.username %}">{{ u.display_name }}</a><div class="text-xs muted">@{{ u.username }}</div></div></div></td>
+  <td>{{ u.get_role_display }}</td>
+  <td>{% if not u.is_active %}<span class="badge badge-red">Bloklangan</span>{% elif u.approval_status == "pending" %}<span class="badge badge-amber">Kutilmoqda</span>{% elif u.approval_status == "rejected" %}<span class="badge badge-gray">Rad etilgan</span>{% else %}<span class="badge badge-green">Faol</span>{% endif %}</td>
+  <td class="text-right"><div class="flex flex-wrap justify-end gap-1">{% if u != user %}
+    <a class="btn btn-secondary btn-sm" href="{% url 'community:start_chat' u.pk %}">💬</a>
+    {% if u.approval_status != "approved" %}<form method="post" action="{% url 'accounts:user_action' u.pk 'approve' %}">{% csrf_token %}<button class="btn btn-success btn-sm">Tasdiqlash</button></form>{% endif %}
+    {% if u.is_active %}<form method="post" action="{% url 'accounts:user_action' u.pk 'block' %}">{% csrf_token %}<button class="btn btn-warning btn-sm">Bloklash</button></form>
+    {% else %}<form method="post" action="{% url 'accounts:user_action' u.pk 'unblock' %}">{% csrf_token %}<button class="btn btn-success btn-sm">Blokdan chiqarish</button></form>{% endif %}
+    <form method="post" action="{% url 'accounts:user_action' u.pk 'delete' %}" data-confirm="{{ u.display_name }} butunlay o'chirilsinmi? Bu amalni qaytarib bo'lmaydi.">{% csrf_token %}<button class="btn btn-danger-outline btn-sm">O'chirish</button></form>{% endif %}</div></td></tr>
+{% empty %}<tr><td colspan="4" class="muted">Foydalanuvchi topilmadi.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

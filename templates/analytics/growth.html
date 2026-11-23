@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Kompetensiyalar o'sishi — {{ course.title }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ course.get_absolute_url }}">{{ course.title }}</a><span>/</span><span>Kompetensiyalar o'sishi</span></div>
+<h1 class="page-title mb-1">📈 Kompetensiyalar o'sishi</h1>
+<p class="muted mb-6">{{ student.display_name }} · kirish testi (pre-test) va yakuniy holat (test natijalarining eng yaxshilari) solishtiruvi.</p>
+{% if not g.pre_attempt %}<div class="card card-pad text-center muted">Kirish testi hali topshirilmagan, shuning uchun solishtirish mumkin emas.</div>
+{% else %}
+<div class="mb-6 grid gap-4 md:grid-cols-3">
+  <div class="stat-card text-center"><div class="muted text-sm">Kirish testi</div><div class="stat-num">{{ g.overall_pre|floatformat:0 }}%</div></div>
+  <div class="stat-card text-center"><div class="muted text-sm">Hozirgi holat</div><div class="stat-num">{% if g.overall_final is not None %}{{ g.overall_final|floatformat:0 }}%{% else %}—{% endif %}</div></div>
+  <div class="stat-card text-center"><div class="muted text-sm">O'sish</div><div class="stat-num {% if g.overall_delta and g.overall_delta > 0 %}!text-emerald-600{% endif %}">{% if g.overall_delta is not None %}{% if g.overall_delta > 0 %}+{% endif %}{{ g.overall_delta|floatformat:0 }}%{% else %}—{% endif %}</div></div>
+</div>
+<div class="grid gap-6 lg:grid-cols-2">
+  <div class="card card-pad"><canvas id="chGrowth"></canvas></div>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Kompetensiya</th><th>Kirish</th><th>Yakuniy</th><th>O'sish</th></tr></thead><tbody>
+  {% for r in g.rows %}<tr><td>{{ r.name }}</td><td>{% if r.pre is not None %}{{ r.pre|floatformat:0 }}%{% else %}—{% endif %}</td><td>{% if r.final is not None %}{{ r.final|floatformat:0 }}%{% else %}—{% endif %}</td>
+    <td>{% if r.delta is not None %}<span class="badge {% if r.delta > 0 %}badge-green{% elif r.delta < 0 %}badge-red{% else %}badge-gray{% endif %}">{% if r.delta > 0 %}+{% endif %}{{ r.delta|floatformat:0 }}%</span>{% else %}—{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="4" class="muted">Savollar kompetensiyalarga bog'lanmagan yoki ma'lumot yetarli emas.</td></tr>{% endfor %}</tbody></table></div>
+</div>
+{{ chart|json_script:"chart-data" }}
+{% endif %}
+{% endblock %}
+{% block scripts %}
+{% if g.pre_attempt %}
+<script src="{% static 'dist/chart.umd.min.js' %}"></script>
+<script>
+  const d = JSON.parse(document.getElementById('chart-data').textContent);
+  Chart.defaults.color = document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#475569';
+  new Chart(document.getElementById('chGrowth'), {type: 'bar', data: {labels: d.labels, datasets: [
+    {label: 'Kirish testi', data: d.pre, backgroundColor: '#94a3b8'}, {label: 'Yakuniy holat', data: d.final, backgroundColor: '#6366f1'}]}, options: {scales: {y: {min: 0, max: 100}}}});
+</script>
+{% endif %}
+{% endblock %}

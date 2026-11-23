@@ -1,0 +1,4 @@
+<div class="px-4 py-2.5 text-center text-sm font-medium {% if block.style == 'warning' %}bg-amber-400 text-slate-900{% elif block.style == 'dark' %}bg-slate-900 text-white{% elif block.style == 'soft' %}bg-primary-100 text-primary-900{% else %}bg-primary-600 text-white{% endif %}">
+  {% if block.title %}<strong>{{ block.title }}</strong>{% endif %}{% if block.subtitle %} {{ block.subtitle }}{% endif %}
+  {% if block.button_label %}<a href="{{ block.button_url }}" class="ml-2 underline underline-offset-2">{{ block.button_label }} →</a>{% endif %}
+</div>

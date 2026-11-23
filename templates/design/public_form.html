@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}{{ form_def.title }} — {{ theme.site_name }}{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-2xl"><div class="card card-pad">
+  <h1 class="page-title mb-2">{{ form_def.title }}</h1>
+  {% if form_def.description %}<div class="rich mb-5">{{ form_def.description|rich }}</div>{% endif %}
+  <form method="post">{% csrf_token %}{% include "partials/form.html" %}<button class="btn btn-primary">{{ form_def.submit_label }}</button></form>
+</div></div>
+{% endblock %}

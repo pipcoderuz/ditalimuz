@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Javoblar — {{ course.title }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ course.get_absolute_url }}">{{ course.title }}</a><span>/</span><a href="{{ q.topic.get_absolute_url }}">{{ q.topic.title }}</a><span>/</span><span>Ochiq savol javoblari</span></div>
+<div class="card card-pad mb-6"><span class="badge badge-amber">❓ Ochiq savol</span><div class="rich mt-2">{{ q.text|rich }}</div><div class="mt-2 text-sm muted">Maksimal ball: {{ q.max_score }} · O'tish: {{ q.pass_score }}</div></div>
+<div class="space-y-4">
+{% for a, form in rows %}
+  <div class="card card-pad">
+    <div class="mb-2 flex flex-wrap items-center justify-between gap-2"><div class="flex items-center gap-2">{% include "partials/avatar.html" with u=a.student size=28 %}<strong>{{ a.student.display_name }}</strong><span class="text-xs muted">{{ a.submitted_at|date:"d.m.Y H:i" }}</span></div>
+      {% if a.status == "graded" %}{% if a.passed %}<span class="badge badge-green">O'tdi · {{ a.score|floatformat:0 }}</span>{% else %}<span class="badge badge-red">O'tmadi · {{ a.score|floatformat:0 }}</span>{% endif %}{% else %}<span class="badge badge-amber">Kutilmoqda</span>{% endif %}</div>
+    <div class="mb-3 whitespace-pre-wrap rounded-xl bg-slate-50 p-3 text-sm dark:bg-slate-900/50">{{ a.text }}</div>
+    <form method="post" action="{% url 'assessments:open_answer_grade' a.pk %}" class="grid gap-3 md:grid-cols-6">{% csrf_token %}
+      <div class="md:col-span-1">{{ form.score }}</div><div class="md:col-span-4">{{ form.feedback }}</div><div class="md:col-span-1"><button class="btn btn-primary w-full">Baholash</button></div></form>
+  </div>
+{% empty %}<div class="card card-pad text-center muted">Hali javob yo'q.</div>{% endfor %}
+</div>
+{% endblock %}

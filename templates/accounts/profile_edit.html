@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Profil sozlamalari — {{ theme.site_name }}{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-2xl"><div class="card card-pad">
+  <div class="mb-6 flex items-center gap-4">{% include "partials/avatar.html" with u=user size=72 %}
+    <div><h1 class="page-title !text-2xl">Profil sozlamalari</h1><div class="muted text-sm">@{{ user.username }} · {{ user.get_role_display }}</div></div></div>
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}{% include "partials/form.html" %}
+    <div class="flex items-center gap-3"><button class="btn btn-primary">Saqlash</button><a class="btn btn-ghost" href="{% url 'accounts:profile_public' user.username %}">Profilni ko'rish</a></div></form>
+</div></div>
+{% endblock %}

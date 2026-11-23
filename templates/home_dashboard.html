@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load design_tags ui %}
+{% block title %}Panel — {{ theme.site_name }}{% endblock %}
+{% block content %}
+<div class="mb-6"><h1 class="page-title">Salom, {{ user.display_name }}! 👋</h1><p class="muted">{{ user.get_role_display }} paneli</p></div>
+<div class="mb-6 space-y-6">{% render_blocks 'dashboard' %}</div>
+
+{% if user.is_platform_admin and pending_teachers %}
+<a href="{% url 'accounts:admin_panel' %}" class="mb-6 flex items-center justify-between rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-900 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+  <span>Tasdiqlanishi kutilayotgan o'qituvchilar: <strong>{{ pending_teachers }}</strong></span><span>Ko'rish →</span></a>
+{% endif %}
+
+{% if user.is_student %}
+<div class="grid gap-6 lg:grid-cols-3">
+  <div class="space-y-4 lg:col-span-2">
+    <h2 class="section-title">Mening kurslarim</h2>
+    {% for e in enrollments %}
+    <div class="card card-pad">
+      <div class="flex items-start justify-between gap-3">
+        <div><a class="text-lg font-semibold hover:text-primary-600" href="{{ e.course.get_absolute_url }}">{{ e.course.title }}</a>
+          <div class="text-sm muted">{{ e.course.teacher.display_name|default:"—" }}{% if e.course.start_date or e.course.end_date %} · {% if e.course.start_date %}{{ e.course.start_date|date:"d.m.Y" }}{% endif %} – {% if e.course.end_date %}{{ e.course.end_date|date:"d.m.Y" }}{% endif %}{% endif %}</div></div>
+        {% if e.status == "completed" %}<span class="badge badge-green">Yakunlangan</span>{% elif e.started_at %}<span class="badge badge-primary">O'qimoqda</span>{% else %}<span class="badge badge-gray">Boshlanmagan</span>{% endif %}
+      </div>
+      <div class="progress progress-green mt-4"><div style="width:{{ e.percent }}%"></div></div>
+      <div class="mt-1 text-xs muted">Mavzular: {{ e.done }}/{{ e.total }} ({{ e.percent }}%)</div>
+      <div class="mt-4 flex flex-wrap gap-2"><a class="btn btn-primary btn-sm" href="{{ e.course.get_absolute_url }}">Davom etish</a>
+        <a class="btn btn-secondary btn-sm" href="{% url 'gamification:leaderboard' e.course.slug %}">🏆 Reyting</a>
+        <a class="btn btn-secondary btn-sm" href="{% url 'analytics:student_stats_me' e.course.slug %}">📊 Statistikam</a>
+        <a class="btn btn-secondary btn-sm" href="{% url 'analytics:growth' e.course.slug %}">📈 O'sishim</a></div>
+    </div>
+    {% empty %}<div class="card card-pad text-center"><p class="muted mb-3">Hali hech qaysi kursga yozilmagansiz.</p><a class="btn btn-primary" href="{% url 'courses:course_list' %}">Kurslarni ko'rish</a></div>{% endfor %}
+  </div>
+  <div class="space-y-6">
+    <div><h2 class="section-title mb-3">Yutuqlarim</h2><div class="card card-pad flex flex-wrap gap-2">
+      {% for b in badges %}<span class="badge badge-amber !px-3 !py-1 !text-sm" title="{{ b.info.desc }} — {{ b.course.title }}">{{ b.info.icon }} {{ b.info.title }}</span>{% empty %}<span class="text-sm muted">Hozircha yutuqlar yo'q — birinchi mavzudan boshlang!</span>{% endfor %}</div></div>
+    {% if suggestions %}<div><h2 class="section-title mb-3">Yangi kurslar</h2><div class="card overflow-hidden">{% for c in suggestions %}<a class="list-row" href="{{ c.get_absolute_url }}"><span>{{ c.title }}</span><span class="muted">→</span></a>{% endfor %}</div></div>{% endif %}
+  </div>
+</div>
+
+{% elif user.can_teach %}
+<div class="mb-6 grid gap-4 sm:grid-cols-3">
+  <a href="{% url 'courses:course_create' %}" class="card card-pad card-hover flex items-center gap-3 !border-dashed"><span class="text-3xl">➕</span><span class="font-semibold">Yangi kurs yaratish</span></a>
+  <div class="stat-card"><div class="stat-num">{{ pending_submissions|length }}</div><div class="muted text-sm">tekshirilishi kutilayotgan ish</div></div>
+  <a href="{% url 'assessments:plagiarism_list' %}" class="stat-card {% if open_flags %}!border-red-300{% endif %}"><div class="stat-num {% if open_flags %}!text-red-600{% endif %}">{{ open_flags }}</div><div class="muted text-sm">plagiat ogohlantirishi</div></a>
+</div>
+<div class="grid gap-6 lg:grid-cols-2">
+  <div><h2 class="section-title mb-3">Kurslar</h2><div class="card overflow-hidden">
+    {% for c in courses %}<a class="list-row" href="{{ c.get_absolute_url }}"><span>{{ c.title }}{% if not c.is_published %} <span class="badge badge-amber">qoralama</span>{% endif %}</span><span class="badge badge-gray">{{ c.student_count }} talaba</span></a>
+    {% empty %}<div class="list-row muted">Kurs yo'q.</div>{% endfor %}</div></div>
+  <div><h2 class="section-title mb-3">Tekshirilishi kutilayotgan ishlar</h2><div class="card overflow-hidden">
+    {% for s in pending_submissions %}<a class="list-row" href="{{ s.get_absolute_url }}"><span>{{ s.student.display_name }} — {{ s.assignment.title }}<br><span class="text-xs muted">{{ s.assignment.course.title }} · {{ s.submitted_at|date:"d.m.Y H:i" }}{% if s.is_late %} · <span class="text-red-600">kechikkan</span>{% endif %}</span></span><span class="muted">→</span></a>
+    {% empty %}<div class="list-row muted">Hammasi tekshirilgan 🎉</div>{% endfor %}</div></div>
+</div>
+{% endif %}
+{% endblock %}

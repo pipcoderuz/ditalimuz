@@ -1,0 +1,34 @@
+{
+  "name": "di-talim-assets",
+  "private": true,
+  "description": "Tailwind + Flowbite + TipTap asset pipeline. Natijalar static/dist/ ga yig'iladi (repoga qo'shilgan).",
+  "scripts": {
+    "build:css": "tailwindcss -c tailwind.config.js -i assets/src/input.css -o static/dist/tailwind.css --minify",
+    "build:js": "esbuild assets/src/rich-editor.js --bundle --minify --format=iife --outfile=static/dist/rich-editor.js && esbuild assets/src/app.js --bundle --minify --format=iife --outfile=static/dist/app.js",
+    "build:vendor": "node assets/build-vendor.js",
+    "build": "npm run build:js && npm run build:css && npm run build:vendor",
+    "watch:css": "tailwindcss -c tailwind.config.js -i assets/src/input.css -o static/dist/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.15",
+    "autoprefixer": "^10.4.20",
+    "esbuild": "^0.25.0",
+    "flowbite": "^2.5.2",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.17"
+  },
+  "dependencies": {
+    "@tiptap/core": "^3.0.0",
+    "@tiptap/extension-code-block-lowlight": "^3.0.0",
+    "@tiptap/extension-highlight": "^3.0.0",
+    "@tiptap/extension-image": "^3.0.0",
+    "@tiptap/extension-placeholder": "^3.0.0",
+    "@tiptap/extension-table": "^3.0.0",
+    "@tiptap/extension-text-align": "^3.0.0",
+    "@tiptap/extension-youtube": "^3.0.0",
+    "@tiptap/pm": "^3.0.0",
+    "@tiptap/starter-kit": "^3.0.0",
+    "chart.js": "^4.4.7",
+    "lowlight": "^3.3.0"
+  }
+}

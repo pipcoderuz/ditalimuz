@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Dizayn markazi — {{ theme.site_name }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{% url 'accounts:admin_panel' %}">Boshqaruv</a><span>/</span><span>Dizayn markazi</span></div>
+<h1 class="page-title mb-2">Dizayn markazi</h1>
+<p class="muted mb-8">Saytning ko'rinishini kod yozmasdan o'zgartiring. Har bir bo'lim admin panelida (Unfold) ochiladi, o'zgarishlar saqlangach darhol saytda ko'rinadi.</p>
+<div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+  <a href="{% url 'admin:design_sitetheme_changelist' %}" class="card card-pad card-hover"><div class="mb-3 text-3xl">🎨</div><h2 class="font-semibold">Sayt dizayni</h2><p class="text-sm muted">Sayt nomi, logotip, favicon, asosiy rang, qorong'i rejim, pastki matn.</p></a>
+  <a href="{% url 'admin:design_navitem_changelist' %}" class="card card-pad card-hover"><div class="mb-3 text-3xl">🧭</div><h2 class="font-semibold">Navbar elementlari <span class="badge badge-primary">{{ counts.nav }}</span></h2><p class="text-sm muted">Menyu bandlarini qo'shish, o'chirish, tartiblash, ochiladigan menyu, kimga ko'rinishi.</p></a>
+  <a href="{% url 'admin:design_siteblock_changelist' %}" class="card card-pad card-hover"><div class="mb-3 text-3xl">🧩</div><h2 class="font-semibold">Sahifa bloklari <span class="badge badge-primary">{{ counts.blocks }}</span></h2><p class="text-sm muted">Bosh sahifa va panel komponentlari: hero, kartalar, savol-javob, e'lon, forma, matn.</p></a>
+  <a href="{% url 'admin:design_formdefinition_changelist' %}" class="card card-pad card-hover"><div class="mb-3 text-3xl">📝</div><h2 class="font-semibold">Formalar <span class="badge badge-primary">{{ counts.forms|add:counts.extra_fields }}</span></h2><p class="text-sm muted">Forma maydonlarini qo'shish: mustaqil formalar, ro'yxatdan o'tish va profil uchun qo'shimcha maydonlar.</p></a>
+  <a href="{% url 'admin:design_formsubmission_changelist' %}" class="card card-pad card-hover"><div class="mb-3 text-3xl">📥</div><h2 class="font-semibold">Forma javoblari</h2><p class="text-sm muted">Foydalanuvchilar to'ldirgan formalar natijalari.</p></a>
+  <a href="/" class="card card-pad card-hover"><div class="mb-3 text-3xl">👁️</div><h2 class="font-semibold">Saytni ko'rish</h2><p class="text-sm muted">O'zgarishlar qanday ko'rinishini tekshiring (kirmagan holatda ko'rish uchun brauzerning yashirin oynasidan foydalaning).</p></a>
+</div>
+{% endblock %}

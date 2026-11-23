@@ -1,0 +1,7 @@
+{% load ui %}
+<section class="card card-pad {% if block.style == 'primary' %}!bg-primary-600 !text-white{% elif block.style == 'soft' %}!bg-primary-50 dark:!bg-primary-950{% elif block.style == 'dark' %}!bg-slate-900 !text-white{% endif %}">
+  {% if block.title %}<h2 class="mb-3 text-2xl font-bold">{{ block.title }}</h2>{% endif %}
+  {% if block.image %}<img src="{{ block.image.url }}" alt="" class="mb-4 max-h-80 rounded-2xl object-cover">{% endif %}
+  <div class="rich">{{ block.body|rich }}</div>
+  {% if block.button_label %}<a href="{{ block.button_url }}" class="btn btn-primary mt-4">{{ block.button_label }}</a>{% endif %}
+</section>

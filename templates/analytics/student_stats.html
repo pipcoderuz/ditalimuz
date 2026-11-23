@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Talaba statistikasi — {{ student.display_name }}{% endblock %}
+{% block content %}
+<div class="crumbs"><a href="{{ course.get_absolute_url }}">{{ course.title }}</a><span>/</span><span>Talaba statistikasi</span></div>
+<div class="card card-pad mb-6 flex flex-wrap items-center justify-between gap-4">
+  <div class="flex items-center gap-4">{% include "partials/avatar.html" with u=student size=64 %}<div><h1 class="page-title !text-2xl">{{ student.display_name }}</h1><div class="muted">{{ course.title }}</div></div></div>
+  <div class="flex flex-wrap gap-2"><a class="btn btn-secondary btn-sm" href="{% if user.can_teach %}{% url 'analytics:growth_student' course.slug student.pk %}{% else %}{% url 'analytics:growth' course.slug %}{% endif %}">📈 Kompetensiyalar o'sishi</a>
+    {% if s.certificate %}<a class="btn btn-warning btn-sm" href="{{ s.certificate.get_absolute_url }}">🎓 Sertifikat</a>{% endif %}
+    {% if user.can_teach %}<a class="btn btn-primary btn-sm" href="{% url 'community:start_chat' student.pk %}">💬 Xabar</a>{% endif %}</div>
+</div>
+
+<div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+  <div class="stat-card"><div class="muted text-xs uppercase">Kursga yozilgan</div><div class="mt-1 text-lg font-bold">{{ s.enrollment.enrolled_at|date:"d.m.Y" }}</div></div>
+  <div class="stat-card"><div class="muted text-xs uppercase">O'qishni boshlagan</div><div class="mt-1 text-lg font-bold">{% if s.enrollment.started_at %}{{ s.enrollment.started_at|date:"d.m.Y" }}{% else %}<span class="text-amber-600">hali boshlamagan</span>{% endif %}</div>{% if s.days_to_start is not None %}<div class="text-xs muted">yozilgandan {{ s.days_to_start }} kun keyin</div>{% endif %}</div>
+  <div class="stat-card"><div class="muted text-xs uppercase">Oxirgi faoliyat</div><div class="mt-1 text-lg font-bold">{% if s.enrollment.last_activity_at %}{{ s.enrollment.last_activity_at|date:"d.m.Y" }}{% else %}—{% endif %}</div></div>
+  <div class="stat-card"><div class="muted text-xs uppercase">Davomiyligi</div><div class="mt-1 text-lg font-bold">{% if s.row.days is not None %}{{ s.row.days }} kun{% else %}—{% endif %}</div>{% if s.enrollment.completed_at %}<div class="text-xs muted">yakunlagan: {{ s.enrollment.completed_at|date:"d.m.Y" }}</div>{% endif %}</div>
+  <div class="stat-card md:col-span-2"><div class="muted text-xs uppercase">Progress{% if s.course_avg_progress is not None %} (boshqa talabalar o'rtachasi: {{ s.course_avg_progress }}%){% endif %}</div><div class="progress progress-green mt-3"><div style="width:{{ s.row.progress }}%"></div></div><div class="mt-1 text-sm font-semibold">{{ s.row.progress }}%</div></div>
+  <div class="stat-card"><div class="muted text-xs uppercase">O'rtacha ball</div><div class="mt-1 text-2xl font-bold">{% if s.row.score is not None %}{{ s.row.score }}%{% else %}—{% endif %}</div></div>
+  <div class="stat-card"><div class="muted text-xs uppercase">Holat</div><div class="mt-2">{% if s.row.state == "completed" %}<span class="badge badge-green !text-sm">Yakunlagan</span>{% elif s.row.state == "learning" %}<span class="badge badge-primary !text-sm">O'qimoqda</span>{% else %}<span class="badge badge-gray !text-sm">Boshlamagan</span>{% endif %}</div></div>
+</div>
+
+<div class="grid gap-6 lg:grid-cols-3">
+  <div class="lg:col-span-2"><h2 class="section-title mb-3">Modullar bo'yicha yo'l</h2>
+    <ol class="relative space-y-4 border-l-2 border-slate-200 pl-6 dark:border-slate-700">
+      {% if s.pretest %}<li><span class="absolute -left-[9px] mt-1 h-4 w-4 rounded-full bg-sky-500"></span><div class="card card-pad"><strong>Kirish testi</strong><div class="text-sm muted">{{ s.pretest.score|floatformat:0 }} ball · {{ s.pretest.submitted_at|date:"d.m.Y" }}</div></div></li>{% endif %}
+      {% for m in s.modules %}<li><span class="absolute -left-[9px] mt-1 h-4 w-4 rounded-full {% if m.finished_at %}bg-emerald-500{% else %}bg-slate-300 dark:bg-slate-600{% endif %}"></span>
+        <div class="card card-pad"><div class="flex items-center justify-between gap-2"><strong>{{ m.module.title }}</strong>{% if m.finished_at %}<span class="badge badge-green">tugatgan {{ m.finished_at|date:"d.m.Y" }}</span>{% else %}<span class="badge badge-gray">jarayonda</span>{% endif %}</div>
+          <div class="mt-2 text-sm muted">Mavzular: {{ m.topics_done }}/{{ m.topics_total }}{% if m.days is not None %} · oldingi bosqichdan {{ m.days }} kun{% endif %}</div>
+          <div class="progress mt-2"><div style="width:{% widthratio m.topics_done m.topics_total 100 %}%"></div></div></div></li>
+      {% empty %}<li class="muted">Modullar yo'q.</li>{% endfor %}
+    </ol></div>
+  <div><h2 class="section-title mb-3">Faollik</h2><div class="card card-pad space-y-3 text-sm">
+    <div class="flex justify-between"><span class="muted">Test urinishlari</span><strong>{{ s.attempts }}</strong></div>
+    <div class="flex justify-between"><span class="muted">Topshirilgan ishlar</span><strong>{{ s.submissions }}</strong></div>
+    <div class="flex justify-between"><span class="muted">Ochiq savol javoblari</span><strong>{{ s.open_answers }}</strong></div>
+    <div class="flex justify-between"><span class="muted">Yutuqlar</span><strong>{{ s.badges }}</strong></div></div></div>
+</div>
+{% endblock %}

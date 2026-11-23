@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Plagiat nazorati — {{ theme.site_name }}{% endblock %}
+{% block content %}
+<h1 class="page-title mb-2">Plagiat nazorati</h1>
+<p class="muted mb-5">Tizim yuklangan ZIP fayllarning hajmi, yuborilish vaqti, o'zgaruvchi nomlari va kod tuzilmasini solishtiradi. Bu sodda ogohlantirish — yakuniy qaror o'qituvchida.</p>
+<div class="mb-4 inline-flex overflow-hidden rounded-xl border border-slate-300 text-sm dark:border-slate-600">
+  <a class="px-4 py-2 {% if status == 'open' %}bg-primary-600 text-white{% else %}hover:bg-slate-100 dark:hover:bg-slate-800{% endif %}" href="?holat=open">Ko'rib chiqilmagan</a>
+  <a class="border-l border-slate-300 px-4 py-2 dark:border-slate-600 {% if status == 'confirmed' %}bg-primary-600 text-white{% else %}hover:bg-slate-100 dark:hover:bg-slate-800{% endif %}" href="?holat=confirmed">Tasdiqlangan</a>
+  <a class="border-l border-slate-300 px-4 py-2 dark:border-slate-600 {% if status == 'dismissed' %}bg-primary-600 text-white{% else %}hover:bg-slate-100 dark:hover:bg-slate-800{% endif %}" href="?holat=dismissed">Asossiz</a></div>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Topshiriq</th><th>Talabalar</th><th>O'xshashlik</th><th>Tafsilotlar</th><th></th></tr></thead><tbody>
+{% for f in flags %}<tr>
+  <td>{{ f.assignment.title }}<div class="text-xs muted">{{ f.assignment.course.title }}</div></td>
+  <td><a class="link" href="{{ f.submission_a.get_absolute_url }}">{{ f.submission_a.student.display_name }}</a> ⇄ <a class="link" href="{{ f.submission_b.get_absolute_url }}">{{ f.submission_b.student.display_name }}</a></td>
+  <td><span class="badge badge-red !text-sm">{{ f.score|floatformat:0 }}%</span></td>
+  <td class="text-xs muted">{% if f.details.same_hash %}<strong>ZIP aynan bir xil.</strong><br>{% endif %}Nomlar {{ f.details.identifiers }}% · tuzilma {{ f.details.structure }}% · hajm {{ f.details.size }}%<br>Vaqt farqi: {{ f.details.time_diff_min }} daq.</td>
+  <td class="text-right"><div class="flex flex-wrap justify-end gap-1">
+    {% if f.status != "confirmed" %}<form method="post" action="{% url 'assessments:plagiarism_update' f.pk %}">{% csrf_token %}<input type="hidden" name="status" value="confirmed"><button class="btn btn-danger btn-sm">Tasdiqlash</button></form>{% endif %}
+    {% if f.status != "dismissed" %}<form method="post" action="{% url 'assessments:plagiarism_update' f.pk %}">{% csrf_token %}<input type="hidden" name="status" value="dismissed"><button class="btn btn-secondary btn-sm">Asossiz</button></form>{% endif %}
+    {% if f.status != "open" %}<form method="post" action="{% url 'assessments:plagiarism_update' f.pk %}">{% csrf_token %}<input type="hidden" name="status" value="open"><button class="btn btn-secondary btn-sm">Qayta ochish</button></form>{% endif %}</div></td></tr>
+{% empty %}<tr><td colspan="5" class="muted">Ogohlantirishlar yo'q.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

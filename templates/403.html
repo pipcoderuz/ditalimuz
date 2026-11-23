@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mx-auto max-w-lg py-16 text-center">
+  <div class="bg-gradient-to-r from-primary-600 to-purple-500 bg-clip-text text-8xl font-black text-transparent">403</div>
+  <p class="mt-4 text-lg muted">Bu sahifaga kirish huquqingiz yo'q.</p>
+  <a href="{% url 'home' %}" class="btn btn-primary mt-6">Bosh sahifaga</a>
+</div>
+{% endblock %}

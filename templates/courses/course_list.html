@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Kurslar — {{ theme.site_name }}{% endblock %}
+{% block content %}
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="page-title">Kurslar</h1>
+  {% if user.can_teach %}<a class="btn btn-primary" href="{% url 'courses:course_create' %}">+ Yangi kurs</a>{% endif %}
+</div>
+<form class="mb-6 flex gap-2" method="get"><input name="q" value="{{ q }}" class="input" placeholder="Kurs qidirish..."><button class="btn btn-secondary">Qidirish</button></form>
+<div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+{% for c in courses %}
+  <a href="{{ c.get_absolute_url }}" class="card card-hover flex flex-col overflow-hidden">
+    <div class="h-2 bg-gradient-to-r from-primary-500 to-purple-500"></div>
+    <div class="flex flex-1 flex-col p-5">
+      <h2 class="text-lg font-semibold">{{ c.title }}</h2>
+      <p class="mt-2 flex-1 text-sm muted">{{ c.description|excerpt:24 }}</p>
+      <div class="mt-4 space-y-1 text-sm muted"><div>👤 {{ c.teacher.display_name|default:"—" }} · 👥 {{ c.student_count }} talaba</div>
+        {% if c.start_date or c.end_date %}<div>📅 {% if c.start_date %}{{ c.start_date|date:"d.m.Y" }}{% endif %} – {% if c.end_date %}{{ c.end_date|date:"d.m.Y" }}{% endif %}</div>{% endif %}</div>
+      <div class="mt-3 flex flex-wrap gap-1.5">
+        {% if c.id in enrolled_ids %}<span class="badge badge-green">Yozilgansiz</span>
+        {% elif c.end_date and c.end_date < today %}<span class="badge badge-gray">Tugagan</span>
+        {% elif c.start_date and c.start_date > today %}<span class="badge badge-blue">Tez orada</span>{% endif %}
+        {% if not c.is_published %}<span class="badge badge-amber">Qoralama</span>{% endif %}</div>
+    </div>
+  </a>
+{% empty %}<div class="card card-pad text-center muted sm:col-span-3">Kurslar topilmadi.</div>{% endfor %}
+</div>
+{% endblock %}

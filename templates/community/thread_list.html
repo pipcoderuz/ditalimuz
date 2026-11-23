@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load ui %}
+{% block title %}Forum — {{ theme.site_name }}{% endblock %}
+{% block content %}
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3"><h1 class="page-title">Forum — savol-javob</h1><a class="btn btn-primary" href="{% url 'community:thread_create' %}{% if course_id %}?kurs={{ course_id }}{% endif %}">+ Yangi savol</a></div>
+<form class="mb-5 grid gap-3 md:grid-cols-4" method="get">
+  <select name="kurs" class="input" onchange="this.form.submit()"><option value="">Barcha kurslar</option>{% for c in courses %}<option value="{{ c.pk }}" {% if c.pk|stringformat:"s" == course_id %}selected{% endif %}>{{ c.title }}</option>{% endfor %}</select>
+  <input name="q" value="{{ q }}" class="input md:col-span-2" placeholder="Qidirish..."><button class="btn btn-secondary">Qidirish</button></form>
+<div class="card overflow-hidden">
+{% for t in threads %}<a class="list-row" href="{{ t.get_absolute_url }}"><div class="min-w-0"><div class="font-semibold">{{ t.title }}</div>
+  <div class="mt-0.5 text-xs muted">{{ t.author.display_name }}{% if t.author.can_teach %} <span class="badge badge-primary">{{ t.author.get_role_display }}</span>{% endif %} · {{ t.created_at|date:"d.m.Y H:i" }}{% if t.course %} · {{ t.course.title }}{% endif %}</div></div>
+  <span class="badge badge-gray whitespace-nowrap">{{ t.post_count }} javob</span></a>
+{% empty %}<div class="list-row muted">Savollar yo'q.</div>{% endfor %}</div>
+{% endblock %}

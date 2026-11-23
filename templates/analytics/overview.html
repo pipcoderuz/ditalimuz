@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Statistika — {{ theme.site_name }}{% endblock %}
+{% block content %}
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+  <div><h1 class="page-title">📊 Umumiy statistika</h1>
+    <p class="muted">{% if user.is_platform_admin %}Butun platforma bo'yicha{% elif user.is_teacher %}Sizning kurslaringiz bo'yicha{% else %}Sizning shaxsiy natijalaringiz{% endif %}</p></div>
+  {% if user.can_teach %}<a class="btn btn-secondary" href="{% url 'analytics:overview_csv' %}?{{ request.GET.urlencode }}">⬇ CSV (Excel)</a>{% endif %}
+</div>
+
+{% if user.can_teach %}
+<form method="get" class="card card-pad mb-6 grid gap-3 md:grid-cols-5">
+  <div><label class="label">Kurs</label><select name="kurs" class="input"><option value="">Barcha kurslar</option>{% for c in courses %}<option value="{{ c.pk }}" {% if f.kurs == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.title }}</option>{% endfor %}</select></div>
+  <div><label class="label">Boshlagan sana: dan</label><input type="date" name="dan" value="{{ f.dan }}" class="input"></div>
+  <div><label class="label">gacha</label><input type="date" name="gacha" value="{{ f.gacha }}" class="input"></div>
+  <div><label class="label">Holat</label><select name="holat" class="input"><option value="">Hammasi</option><option value="not_started" {% if f.holat == "not_started" %}selected{% endif %}>Boshlamagan</option><option value="learning" {% if f.holat == "learning" %}selected{% endif %}>O'qimoqda</option><option value="completed" {% if f.holat == "completed" %}selected{% endif %}>Yakunlagan</option></select></div>
+  <div class="flex items-end gap-2"><button class="btn btn-primary w-full">Filtrlash</button><a class="btn btn-ghost" href="{% url 'analytics:overview' %}">Tozalash</a></div>
+</form>
+{% endif %}
+
+<div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
+  <div class="stat-card"><div class="stat-num">{{ totals.enrollments }}</div><div class="muted text-sm">yozilish</div></div>
+  <div class="stat-card"><div class="stat-num">{{ totals.started }}</div><div class="muted text-sm">boshlagan</div></div>
+  <div class="stat-card"><div class="stat-num">{{ totals.completed }}</div><div class="muted text-sm">yakunlagan ({{ totals.completion_rate }}%)</div></div>
+  <div class="stat-card"><div class="stat-num">{{ totals.avg_progress }}%</div><div class="muted text-sm">o'rtacha progress</div></div>
+  <div class="stat-card"><div class="stat-num">{% if totals.avg_score is not None %}{{ totals.avg_score }}%{% else %}—{% endif %}</div><div class="muted text-sm">o'rtacha ball</div></div>
+  <div class="stat-card"><div class="stat-num">{% if totals.avg_days_to_finish is not None %}{{ totals.avg_days_to_finish }}{% else %}—{% endif %}</div><div class="muted text-sm">kunda yakunlash (o'rtacha)</div></div>
+  <div class="stat-card"><div class="stat-num">{{ totals.active_7d }}</div><div class="muted text-sm">oxirgi 7 kunda faol</div></div>
+  <div class="stat-card"><div class="stat-num">{{ totals.certificates }}</div><div class="muted text-sm">sertifikat</div></div>
+  <div class="stat-card"><div class="stat-num">{{ totals.attempts }}</div><div class="muted text-sm">test urinishi</div></div>
+  <div class="stat-card"><div class="stat-num">{{ totals.submissions }}</div><div class="muted text-sm">topshirilgan ish</div></div>
+  {% if user.is_platform_admin %}{% for role, n in users_by_role.items %}<div class="stat-card"><div class="stat-num">{{ n }}</div><div class="muted text-sm">{% if role == "student" %}talaba{% elif role == "teacher" %}o'qituvchi{% else %}administrator{% endif %} (akkaunt)</div></div>{% endfor %}{% endif %}
+</div>
+
+<div class="mb-6 grid gap-6 lg:grid-cols-2">
+  <div class="card card-pad"><h2 class="section-title mb-3">Oylar bo'yicha (so'nggi 12 oy)</h2><canvas id="chMonths" height="130"></canvas></div>
+  <div class="card card-pad"><h2 class="section-title mb-3">Kurslar bo'yicha</h2><canvas id="chCourses" height="130"></canvas></div>
+</div>
+
+{% if per_course %}
+<h2 class="section-title mb-3">Kurslar</h2>
+<div class="tbl-wrap mb-8"><table class="tbl"><thead><tr><th>Kurs</th><th>Yozilgan</th><th>Boshlagan</th><th>Yakunlagan</th><th>Yakunlash %</th><th>O'rtacha progress</th><th>O'rtacha kun</th></tr></thead><tbody>
+{% for c in per_course %}<tr><td><a class="link" href="{{ c.course.get_absolute_url }}">{{ c.course.title }}</a></td><td>{{ c.enrolled }}</td><td>{{ c.started }}</td><td>{{ c.completed }}</td><td>{{ c.rate }}%</td><td style="width:12rem"><div class="progress"><div style="width:{{ c.avg_progress }}%"></div></div></td><td>{% if c.avg_days is not None %}{{ c.avg_days }}{% else %}—{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+{% endif %}
+
+<h2 class="section-title mb-3">{% if user.can_teach %}Talabalar{% else %}Mening kurslarim{% endif %}</h2>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Talaba</th><th>Kurs</th><th>Yozilgan</th><th>Boshlagan</th><th>Oxirgi faoliyat</th><th style="width:10rem">Progress</th><th>Ball</th><th>Kun</th><th>Holat</th><th></th></tr></thead><tbody>
+{% for r in rows %}<tr>
+  <td>{{ r.e.student.display_name }}</td><td>{{ r.e.course.title }}</td>
+  <td class="text-xs muted">{{ r.e.enrolled_at|date:"d.m.Y" }}</td>
+  <td class="text-xs">{% if r.e.started_at %}<strong>{{ r.e.started_at|date:"d.m.Y" }}</strong>{% else %}<span class="badge badge-gray">boshlamagan</span>{% endif %}</td>
+  <td class="text-xs muted">{% if r.e.last_activity_at %}{{ r.e.last_activity_at|date:"d.m.Y" }}{% else %}—{% endif %}</td>
+  <td><div class="progress"><div style="width:{{ r.progress }}%"></div></div><span class="text-xs muted">{{ r.progress }}%</span></td>
+  <td>{% if r.score is not None %}{{ r.score }}%{% else %}—{% endif %}</td><td>{% if r.days is not None %}{{ r.days }}{% else %}—{% endif %}</td>
+  <td>{% if r.state == "completed" %}<span class="badge badge-green">Yakunlagan</span>{% elif r.state == "learning" %}<span class="badge badge-primary">O'qimoqda</span>{% else %}<span class="badge badge-gray">Boshlamagan</span>{% endif %}</td>
+  <td class="text-right">{% if user.can_teach %}<a class="btn btn-secondary btn-sm" href="{% url 'analytics:student_stats' r.e.course.slug r.e.student.pk %}">Batafsil</a>{% else %}<a class="btn btn-secondary btn-sm" href="{% url 'analytics:student_stats_me' r.e.course.slug %}">Batafsil</a>{% endif %}</td></tr>
+{% empty %}<tr><td colspan="10" class="muted">Ma'lumot yo'q.</td></tr>{% endfor %}</tbody></table></div>
+{{ chart|json_script:"chart-data" }}
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'dist/chart.umd.min.js' %}"></script>
+<script>
+  const d = JSON.parse(document.getElementById('chart-data').textContent);
+  const dark = document.documentElement.classList.contains('dark');
+  Chart.defaults.color = dark ? '#cbd5e1' : '#475569';
+  const ds = (label, data, color) => ({label, data, borderColor: color, backgroundColor: color + '33', tension: .3, fill: false});
+  const sets = [ds('Yozilgan', d.enrolled, '#6366f1'), ds("Boshlagan", d.started, '#0ea5e9'), ds('Yakunlagan', d.completed, '#10b981')];
+  if (d.registered) sets.push(ds("Ro'yxatdan o'tgan", d.registered, '#f59e0b'));
+  new Chart(document.getElementById('chMonths'), {type: 'line', data: {labels: d.months, datasets: sets}, options: {scales: {y: {beginAtZero: true, ticks: {precision: 0}}}}});
+  new Chart(document.getElementById('chCourses'), {type: 'bar', data: {labels: d.courses.labels, datasets: [
+    {label: 'Yozilgan', data: d.courses.enrolled, backgroundColor: '#6366f1'}, {label: 'Yakunlagan', data: d.courses.completed, backgroundColor: '#10b981'}]},
+    options: {scales: {y: {beginAtZero: true, ticks: {precision: 0}}}}});
+</script>
+{% endblock %}
